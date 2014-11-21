@@ -14,12 +14,12 @@ class CLDevice
 {
 public:
     CLDevice();
-    explicit CLDevice(const cl_device_id& device_id_);
-    CLDevice(const CLDevice& device_);
+    explicit CLDevice(const cl_device_id& device_id);
+    CLDevice(const CLDevice& device);
     ~CLDevice();
 
     cl_device_id id() const;
-    void setId(const cl_device_id& id_);
+    void setId(const cl_device_id& dev_id);
 
     bool isValid() const;
 
@@ -82,49 +82,21 @@ public:
     QString deviceCVersion() const throw(CLException&);
     QStringList extensions() const throw(CLException&);
 
-    bool hasExtension(const QString &ext_name_) const throw(CLException&);
+    bool hasExtension(const QString &ext_name) const throw(CLException&);
 
-    CLDevice& operator=(const CLDevice& device_);
-    bool operator==(const CLDevice& device_) const;
+    CLDevice& operator=(const CLDevice& device);
+    bool operator==(const CLDevice& device) const;
 
 private:
-    cl_device_id _id;
-    QString _getInfoValueStr(cl_device_info info_) const throw(CLException&);
+    cl_device_id m_id;
+    QString getInfoValueStr(cl_device_info info) const throw(CLException&);
 
     template<class T>
-    T _getInfoValue(cl_device_info info_) const throw(CLException&);
+    T getInfoValue(cl_device_info info) const throw(CLException&);
 
     template<class T>
-    QVector<T> _getInfoValuev(cl_device_info info_) const throw(CLException&);
+    QVector<T> getInfoValuev(cl_device_info info) const throw(CLException&);
 };
-
-
-template<class T>
-T CLDevice::_getInfoValue(cl_device_info info_) const throw(CLException&)
-{
-    T res;
-    CL_ERR_THROW(clGetDeviceInfo(_id, info_, sizeof(T),
-                        static_cast<void*>(&res), NULL));
-    return res;
-}
-
-template<class T>
-QVector<T> CLDevice::_getInfoValuev(cl_device_info info_) const throw(CLException&)
-{
-    size_t size = 0;
-
-    CL_ERR_THROW(clGetDeviceInfo(_id, info_, 0, NULL, &size));
-
-    size_t vec_size = size / sizeof(T);
-    if(vec_size == 0) vec_size = 1;
-
-    QVector<T> res(vec_size);
-
-    CL_ERR_THROW(clGetDeviceInfo(_id, info_, size,
-                        static_cast<void*>(res.data()), NULL));
-
-    return res;
-}
 
 
 Q_DECLARE_METATYPE(CLDevice)

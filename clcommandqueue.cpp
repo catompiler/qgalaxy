@@ -6,76 +6,85 @@
 
 CLCommandQueue::CLCommandQueue()
 {
-    _id = NULL;
+    m_id = NULL;
 }
 
-CLCommandQueue::CLCommandQueue(const cl_command_queue &cq_id_)
+CLCommandQueue::CLCommandQueue(const cl_command_queue &cq_id)
 {
-    _id = cq_id_;
+    m_id = cq_id;
 }
 
-CLCommandQueue::CLCommandQueue(const CLCommandQueue &cq_)
+CLCommandQueue::CLCommandQueue(const CLCommandQueue &cq)
 {
-    _id = cq_._id;
+    m_id = cq.m_id;
 }
 
 CLCommandQueue::~CLCommandQueue()
 {
 }
 
-bool CLCommandQueue::create(const CLContext &clcxt_, const CLDevice &device_, cl_int* err_code_) throw(CLException&)
+bool CLCommandQueue::create(const CLContext &clcxt, const CLDevice &device, cl_int* err_code) throw(CLException&)
 {
     cl_int res = CL_SUCCESS;
-    _id = clCreateCommandQueue(clcxt_.id(), device_.id(), 0, &res);
-    if(err_code_) *err_code_ = res;
+    m_id = clCreateCommandQueue(clcxt.id(), device.id(), 0, &res);
+    if(err_code) *err_code = res;
     CL_ERR_THROW(res);
-    return _id != NULL;
+    return m_id != NULL;
 }
 
 bool CLCommandQueue::retain() throw(CLException&)
 {
-    CL_ERR_THROW(clRetainCommandQueue(_id));
+    CL_ERR_THROW(clRetainCommandQueue(m_id));
     return true;
 }
 
 bool CLCommandQueue::release() throw(CLException&)
 {
-    CL_ERR_THROW(clReleaseCommandQueue(_id));
+    CL_ERR_THROW(clReleaseCommandQueue(m_id));
     return true;
 }
 
 cl_command_queue CLCommandQueue::id() const
 {
-    return _id;
+    return m_id;
 }
 
-void CLCommandQueue::setId(const cl_command_queue &id_)
+void CLCommandQueue::setId(const cl_command_queue &cq_id)
 {
-    _id = id_;
+    m_id = cq_id;
 }
 
 bool CLCommandQueue::isValid() const
 {
-    return _id != NULL;
+    return m_id != NULL;
 }
 
 cl_context CLCommandQueue::contextId() const throw(CLException&)
 {
-    return _getInfoValue<cl_context>(CL_QUEUE_CONTEXT);
+    return getInfoValue<cl_context>(CL_QUEUE_CONTEXT);
 }
 
 cl_device_id CLCommandQueue::deviceId() const throw(CLException&)
 {
-    return _getInfoValue<cl_device_id>(CL_QUEUE_DEVICE);
+    return getInfoValue<cl_device_id>(CL_QUEUE_DEVICE);
 }
 
-CLCommandQueue &CLCommandQueue::operator =(const CLCommandQueue &cq_)
+CLCommandQueue &CLCommandQueue::operator =(const CLCommandQueue &cq)
 {
-    _id = cq_._id;
+    m_id = cq.m_id;
     return *this;
 }
 
-bool CLCommandQueue::operator ==(const CLCommandQueue &cq_) const
+bool CLCommandQueue::operator ==(const CLCommandQueue &cq) const
 {
-    return _id == cq_._id;
+    return m_id == cq.m_id;
+}
+
+template<class T>
+T CLCommandQueue::getInfoValue(cl_command_queue_info info) const throw(CLException&)
+{
+    T res;
+    CL_ERR_THROW(clGetCommandQueueInfo(m_id, info, sizeof(T),
+                        static_cast<void*>(&res), NULL));
+    return res;
 }

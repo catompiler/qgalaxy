@@ -28,48 +28,48 @@ Settings &Settings::get()
 void Settings::read()
 {
     QSettings settings(company_name, app_name);
-    _bodies_count = settings.value(param_bodies_count, 100U).toUInt();
-    _cl_platform_name = settings.value(param_cl_platform_name, QString()).toString();
-    _cl_device_name = settings.value(param_cl_device_name, QString()).toString();
+    bodies_count = settings.value(param_bodies_count, 100U).toUInt();
+    cl_platform_name = settings.value(param_cl_platform_name, QString()).toString();
+    cl_device_name = settings.value(param_cl_device_name, QString()).toString();
 }
 
 void Settings::write()
 {
     QSettings settings(company_name, app_name);
-    settings.setValue(param_bodies_count, static_cast<unsigned int>(_bodies_count));
-    settings.setValue(param_cl_platform_name, _cl_platform_name);
-    settings.setValue(param_cl_device_name, _cl_device_name);
+    settings.setValue(param_bodies_count, static_cast<unsigned int>(bodies_count));
+    settings.setValue(param_cl_platform_name, cl_platform_name);
+    settings.setValue(param_cl_device_name, cl_device_name);
 }
 
 size_t Settings::bodiesCount() const
 {
-    return _bodies_count;
+    return bodies_count;
 }
 
-void Settings::setBodiesCount(size_t bodies_count_)
+void Settings::setBodiesCount(size_t bodies)
 {
-    _bodies_count = bodies_count_;
+    bodies_count = bodies;
     emit settingsChanged();
 }
 
 QString Settings::clPlatformName() const
 {
-    return _cl_platform_name;
+    return cl_platform_name;
 }
 
-void Settings::setClPlatformName(const QString &name_)
+void Settings::setClPlatformName(const QString &name)
 {
-    _cl_platform_name = name_;
+    cl_platform_name = name;
     emit settingsChanged();
 }
 
 QString Settings::clDeviceName() const
 {
-    return _cl_device_name;
+    return cl_device_name;
 }
 
-void Settings::setClDeviceName(const QString &name_)
+void Settings::setClDeviceName(const QString &name)
 {
-    _cl_device_name = name_;
+    cl_device_name = name;
     emit settingsChanged();
 }

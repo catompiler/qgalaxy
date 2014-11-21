@@ -14,17 +14,17 @@ class CLBuffer
 {
 public:
     CLBuffer();
-    explicit CLBuffer(const cl_mem& buf_id_);
-    CLBuffer(const CLBuffer& buffer_);
+    explicit CLBuffer(const cl_mem& buf_id);
+    CLBuffer(const CLBuffer& buffer);
     ~CLBuffer();
 
     cl_mem id() const;
-    void setId(const cl_mem& buf_id_);
+    void setId(const cl_mem& buf_id);
 
     bool isValid() const;
 
-    bool create(const CLContext& cxt_, cl_mem_flags flags_, size_t size_,
-                void* host_ptr_, cl_int* err_code_ = NULL) throw(CLException&);
+    bool create(const CLContext& cxt, cl_mem_flags flags, size_t size,
+                void* host_ptr, cl_int* err_code = NULL) throw(CLException&);
     bool retain() throw(CLException&);
     bool release() throw(CLException&);
 
@@ -33,38 +33,28 @@ public:
     void* hostPtr() const throw(CLException&);
     cl_context contextId() const throw(CLException&);
 
-    bool enqueueRead(const CLCommandQueue& queue_, bool blocking_,
-                     size_t offset_, size_t cb_, void* ptr_,
-                     const CLEventList* wait_events_ = NULL, CLEvent* event_ = NULL) throw(CLException&);
-    bool enqueueWrite(const CLCommandQueue& queue_, bool blocking_,
-                      size_t offset_, size_t cb_, void* ptr_,
-                      const CLEventList* wait_events_ = NULL, CLEvent* event_ = NULL) throw(CLException&);
+    bool enqueueRead(const CLCommandQueue& queue, bool blocking,
+                     size_t offset, size_t cb, void* ptr,
+                     const CLEventList* wait_events = NULL, CLEvent* event = NULL) throw(CLException&);
+    bool enqueueWrite(const CLCommandQueue& queue, bool blocking,
+                      size_t offset, size_t cb, void* ptr,
+                      const CLEventList* wait_events = NULL, CLEvent* event = NULL) throw(CLException&);
 
-    void *enqueueMap(const CLCommandQueue& queue_, bool blocking_,
-                     cl_map_flags flags_, size_t offset_, size_t cb_,
-                     const CLEventList* wait_events_ = NULL, CLEvent* event_ = NULL,
-                     cl_int* err_code_ = NULL) throw(CLException&);
-    bool enqueueUnMap(const CLCommandQueue& queue_, void* ptr_,
-                     const CLEventList* wait_events_ = NULL, CLEvent* event_ = NULL) throw(CLException&);
+    void *enqueueMap(const CLCommandQueue& queue, bool blocking,
+                     cl_map_flags flags, size_t offset, size_t cb,
+                     const CLEventList* wait_events = NULL, CLEvent* event = NULL,
+                     cl_int* err_code = NULL) throw(CLException&);
+    bool enqueueUnMap(const CLCommandQueue& queue, void* ptr,
+                     const CLEventList* wait_events = NULL, CLEvent* event = NULL) throw(CLException&);
 
-    CLBuffer& operator=(const CLBuffer& buffer_);
-    bool operator==(const CLBuffer& buffer_) const;
+    CLBuffer& operator=(const CLBuffer& buffer);
+    bool operator==(const CLBuffer& buffer) const;
 
 private:
-    cl_mem _id;
+    cl_mem m_id;
 
     template<class T>
-    T _getInfoValue(cl_mem_info info_) const throw(CLException&);
+    T getInfoValue(cl_mem_info info_) const throw(CLException&);
 };
-
-
-template<class T>
-T CLBuffer::_getInfoValue(cl_mem_info info_) const throw(CLException&)
-{
-    T res;
-    CL_ERR_THROW(clGetMemObjectInfo(_id, info_, sizeof(T),
-                      static_cast<void*>(&res), NULL));
-    return res;
-}
 
 #endif // CLBUFFER_H

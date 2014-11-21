@@ -18,7 +18,7 @@ OCLSettingsDialog::OCLSettingsDialog(QWidget *parent) :
     ui(new Ui::OCLSettingsDialog)
 {
     ui->setupUi(this);
-    _populateLists();
+    populateLists();
 }
 
 OCLSettingsDialog::~OCLSettingsDialog()
@@ -26,9 +26,9 @@ OCLSettingsDialog::~OCLSettingsDialog()
     delete ui;
 }
 
-void OCLSettingsDialog::setCurrentPlatform(const CLPlatform &platform_)
+void OCLSettingsDialog::setCurrentPlatform(const CLPlatform &platform)
 {
-    int indx = _platformIndex(platform_);
+    int indx = platformIndex(platform);
     ui->cbPlatform->setCurrentIndex(indx);
 }
 
@@ -39,9 +39,9 @@ CLPlatform OCLSettingsDialog::currentPlatform() const
     return ui->cbPlatform->itemData(indx).value<CLPlatform>();
 }
 
-void OCLSettingsDialog::setCurrentDevice(const CLDevice &device_)
+void OCLSettingsDialog::setCurrentDevice(const CLDevice &device)
 {
-    int indx = _deviceIndex(device_);
+    int indx = deviceIndex(device);
     ui->cbDevice->setCurrentIndex(indx);
 }
 
@@ -52,12 +52,12 @@ CLDevice OCLSettingsDialog::currentDevice() const
     return ui->cbDevice->itemData(indx).value<CLDevice>();
 }
 
-void OCLSettingsDialog::setBodiesCount(size_t count_)
+void OCLSettingsDialog::setBodiesCount(size_t count)
 {
-    if(count_ > static_cast<size_t>(ui->sbBodiesCount->maximum())){
-        ui->sbBodiesCount->setMaximum(count_);
+    if(count > static_cast<size_t>(ui->sbBodiesCount->maximum())){
+        ui->sbBodiesCount->setMaximum(count);
     }
-    ui->sbBodiesCount->setValue(count_);
+    ui->sbBodiesCount->setValue(count);
 }
 
 size_t OCLSettingsDialog::bodiesCount() const
@@ -65,27 +65,41 @@ size_t OCLSettingsDialog::bodiesCount() const
     return ui->sbBodiesCount->value();
 }
 
-int OCLSettingsDialog::_platformIndex(const CLPlatform &platform_)
+void OCLSettingsDialog::on_cbPlatform_currentIndexChanged(int index)
+{
+    if(index != -1){
+        populateDevices(ui->cbPlatform->itemData(index).value<CLPlatform>());
+    }
+}
+
+void OCLSettingsDialog::on_cbDevice_currentIndexChanged(int index)
+{
+    if(index != -1){
+        updateDeviceInfo(ui->cbDevice->itemData(index).value<CLDevice>());
+    }
+}
+
+int OCLSettingsDialog::platformIndex(const CLPlatform &platform)
 {
     for(int i = 0; i < ui->cbPlatform->count(); i ++){
-        if(ui->cbPlatform->itemData(i).value<CLPlatform>() == platform_){
+        if(ui->cbPlatform->itemData(i).value<CLPlatform>() == platform){
             return i;
         }
     }
     return -1;
 }
 
-int OCLSettingsDialog::_deviceIndex(const CLDevice &device_)
+int OCLSettingsDialog::deviceIndex(const CLDevice &device)
 {
     for(int i = 0; i < ui->cbDevice->count(); i ++){
-        if(ui->cbDevice->itemData(i).value<CLDevice>() == device_){
+        if(ui->cbDevice->itemData(i).value<CLDevice>() == device){
             return i;
         }
     }
     return -1;
 }
 
-void OCLSettingsDialog::_refreshUi()
+void OCLSettingsDialog::refreshUi()
 {
     bool good_platform = false;
     bool good_device = false;
@@ -102,12 +116,12 @@ void OCLSettingsDialog::_refreshUi()
     }
 }
 
-void OCLSettingsDialog::_populateLists()
+void OCLSettingsDialog::populateLists()
 {
-    _populatePlatforms();
+    populatePlatforms();
 }
 
-void OCLSettingsDialog::_populatePlatforms()
+void OCLSettingsDialog::populatePlatforms()
 {
     ui->cbPlatform->clear();
     CLPlatformList platforms = CLPlatform::getPlatforms();
@@ -132,11 +146,11 @@ void OCLSettingsDialog::_populatePlatforms()
     }
 }
 
-void OCLSettingsDialog::_populateDevices(const CLPlatform& platform_)
+void OCLSettingsDialog::populateDevices(const CLPlatform& platform)
 {
     ui->cbDevice->clear();
-    if(!platform_.isValid()) return;
-    CLDeviceList devices = platform_.getDevices();
+    if(!platform.isValid()) return;
+    CLDeviceList devices = platform.getDevices();
     QIcon item_icon;
     for(CLDeviceList::iterator it = devices.begin(); it != devices.end(); ++ it){
         switch((*it).type()){
@@ -157,16 +171,16 @@ void OCLSettingsDialog::_populateDevices(const CLPlatform& platform_)
     }
 }
 
-void OCLSettingsDialog::_updateDeviceInfo(const CLDevice &device_)
+void OCLSettingsDialog::updateDeviceInfo(const CLDevice &device)
 {
     QString compUnits;
     QString clockFreq;
     QString exts;
 
-    if(device_.isValid()){
-        compUnits = QString::number(device_.maxComputeUnits());
-        clockFreq = QString::number(device_.maxClockFrequency());
-        exts = device_.extensions().join(", ");
+    if(device.isValid()){
+        compUnits = QString::number(device.maxComputeUnits());
+        clockFreq = QString::number(device.maxClockFrequency());
+        exts = device.extensions().join(", ");
     }
 
     ui->leDevCompUnits->setText(compUnits);

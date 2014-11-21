@@ -4,17 +4,17 @@
 
 CLPlatform::CLPlatform()
 {
-    _id = NULL;
+    m_id = NULL;
 }
 
-CLPlatform::CLPlatform(const cl_platform_id &platform_id_)
+CLPlatform::CLPlatform(const cl_platform_id &platform_id)
 {
-    _id = platform_id_;
+    m_id = platform_id;
 }
 
-CLPlatform::CLPlatform(const CLPlatform &platform_)
+CLPlatform::CLPlatform(const CLPlatform &platform)
 {
-    _id = platform_._id;
+    m_id = platform.m_id;
 }
 
 CLPlatform::~CLPlatform()
@@ -23,42 +23,42 @@ CLPlatform::~CLPlatform()
 
 cl_platform_id CLPlatform::id() const
 {
-    return _id;
+    return m_id;
 }
 
-void CLPlatform::setId(const cl_platform_id &id_)
+void CLPlatform::setId(const cl_platform_id &platform_id)
 {
-    _id = id_;
+    m_id = platform_id;
 }
 
 bool CLPlatform::isValid() const
 {
-    return _id != NULL;
+    return m_id != NULL;
 }
 
 QString CLPlatform::profile() const throw(CLException&)
 {
-    return _getInfoValueStr(CL_PLATFORM_PROFILE);
+    return getInfoValueStr(CL_PLATFORM_PROFILE);
 }
 
 QString CLPlatform::version() const throw(CLException&)
 {
-    return _getInfoValueStr(CL_PLATFORM_VERSION);
+    return getInfoValueStr(CL_PLATFORM_VERSION);
 }
 
 QString CLPlatform::name() const throw(CLException&)
 {
-    return _getInfoValueStr(CL_PLATFORM_NAME);
+    return getInfoValueStr(CL_PLATFORM_NAME);
 }
 
 QString CLPlatform::vendor() const throw(CLException&)
 {
-    return _getInfoValueStr(CL_PLATFORM_VENDOR);
+    return getInfoValueStr(CL_PLATFORM_VENDOR);
 }
 
 QStringList CLPlatform::extensions() const throw(CLException&)
 {
-    return _getInfoValueStr(CL_PLATFORM_EXTENSIONS).split(" ", QString::SkipEmptyParts);
+    return getInfoValueStr(CL_PLATFORM_EXTENSIONS).split(" ", QString::SkipEmptyParts);
 }
 
 vendor::id_t CLPlatform::vendorId() const throw(CLException&)
@@ -66,9 +66,9 @@ vendor::id_t CLPlatform::vendorId() const throw(CLException&)
     return vendor::id::byname(vendor());
 }
 
-bool CLPlatform::hasExtension(const QString &ext_name_) const throw(CLException&)
+bool CLPlatform::hasExtension(const QString &ext_name) const throw(CLException&)
 {
-    return extensions().contains(ext_name_);
+    return extensions().contains(ext_name);
 }
 
 size_t CLPlatform::count() throw(CLException&)
@@ -104,11 +104,11 @@ CLPlatform CLPlatform::byName(const QString &name_) throw(CLException&)
     return CLPlatform();
 }
 
-CLDevice CLPlatform::deviceByName(const QString &name_) const throw(CLException&)
+CLDevice CLPlatform::deviceByName(const QString &dev_name) const throw(CLException&)
 {
     QList<CLDevice> devices = getDevices();
     for(QList<CLDevice>::iterator it = devices.begin(); it != devices.end(); ++ it){
-        if((*it).name() == name_) return *it;
+        if((*it).name() == dev_name) return *it;
     }
     return CLDevice();
 }
@@ -118,10 +118,10 @@ size_t CLPlatform::devicesCount() const throw(CLException&)
     return devicesCount(CL_DEVICE_TYPE_ALL);
 }
 
-size_t CLPlatform::devicesCount(cl_device_type device_type_) const throw(CLException&)
+size_t CLPlatform::devicesCount(cl_device_type device_type) const throw(CLException&)
 {
     cl_uint devs_count;
-    CL_ERR_THROW(clGetDeviceIDs(_id, device_type_, 0, NULL, &devs_count));
+    CL_ERR_THROW(clGetDeviceIDs(m_id, device_type, 0, NULL, &devs_count));
     return devs_count;
 }
 
@@ -130,16 +130,16 @@ QList<CLDevice> CLPlatform::getDevices() const throw(CLException&)
     return getDevices(CL_DEVICE_TYPE_ALL);
 }
 
-QList<CLDevice> CLPlatform::getDevices(cl_device_type device_type_) const throw(CLException&)
+QList<CLDevice> CLPlatform::getDevices(cl_device_type device_type) const throw(CLException&)
 {
     QList<CLDevice> res;
 
-    size_t devs_count = devicesCount(device_type_);
+    size_t devs_count = devicesCount(device_type);
 
     if(devs_count == 0) return res;
 
     cl_device_id dev_ids[devs_count];
-    CL_ERR_THROW(clGetDeviceIDs(_id, device_type_, devs_count, dev_ids, NULL));
+    CL_ERR_THROW(clGetDeviceIDs(m_id, device_type, devs_count, dev_ids, NULL));
 
     for(size_t i = 0; i < devs_count; i ++){
         res.push_back(CLDevice(dev_ids[i]));
@@ -147,26 +147,26 @@ QList<CLDevice> CLPlatform::getDevices(cl_device_type device_type_) const throw(
     return res;
 }
 
-CLPlatform &CLPlatform::operator =(const CLPlatform &platform_)
+CLPlatform &CLPlatform::operator =(const CLPlatform &platform)
 {
-    _id = platform_._id;
+    m_id = platform.m_id;
     return *this;
 }
 
-bool CLPlatform::operator ==(const CLPlatform &platform_) const
+bool CLPlatform::operator ==(const CLPlatform &platform) const
 {
-    return _id == platform_._id;
+    return m_id == platform.m_id;
 }
 
-QString CLPlatform::_getInfoValueStr(cl_platform_info info_) const throw(CLException&)
+QString CLPlatform::getInfoValueStr(cl_platform_info info_) const throw(CLException&)
 {
     size_t len = 0;
 
-    CL_ERR_THROW(clGetPlatformInfo(_id, info_, 0, NULL, &len));
+    CL_ERR_THROW(clGetPlatformInfo(m_id, info_, 0, NULL, &len));
 
     char res_str[len];
 
-    CL_ERR_THROW(clGetPlatformInfo(_id, info_, len,
+    CL_ERR_THROW(clGetPlatformInfo(m_id, info_, len,
             static_cast<void*>(res_str), NULL));
 
     return QString(res_str);

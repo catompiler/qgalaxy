@@ -17,56 +17,46 @@ class CLEvent : public QObject
     Q_OBJECT
 public:
     explicit CLEvent(QObject *parent = 0);
-    explicit CLEvent(const cl_event& event_id_, QObject* parent = 0);
-    CLEvent(const CLEvent &event_);
+    explicit CLEvent(const cl_event& event_id, QObject* parent = 0);
+    CLEvent(const CLEvent &event);
     ~CLEvent();
 
     cl_event id() const;
-    void setId(const cl_event& event_id_);
+    void setId(const cl_event& event_id);
 
     bool isValid() const;
 
-    bool create(const CLContext& cxt_, cl_int* err_code_ = NULL) throw(CLException&);
+    bool create(const CLContext& cxt, cl_int* err_code = NULL) throw(CLException&);
     bool retain() throw(CLException&);
     bool release() throw(CLException&);
 
     cl_int status() const throw(CLException&);
-    bool setStatus(cl_int status_) throw(CLException&);
+    bool setStatus(cl_int status) throw(CLException&);
 
     bool wait() const throw(CLException&);
-    static bool waitForEvents(const QList<CLEvent>& events_) throw(CLException&);
+    static bool waitForEvents(const QList<CLEvent>& events) throw(CLException&);
 
     cl_command_queue commandQueueId() const throw(CLException&);
     cl_context contextId() const throw(CLException&);
     cl_command_type commandType() const throw(CLException&);
 
-    CLEvent& operator=(const CLEvent& event_);
-    bool operator==(const CLEvent& event_) const;
+    CLEvent& operator=(const CLEvent& event);
+    bool operator==(const CLEvent& event) const;
     
 signals:
-    void completed(cl_int exec_status_);
+    void completed(cl_int exec_status);
 private:
-    cl_event _id;
+    cl_event m_id;
 
-    inline void _setId(cl_event id_) throw(CLException&);
+    inline void m_setId(cl_event ev_id) throw(CLException&);
 
     template<class T>
-    T _getInfoValue(cl_event_info info_) const throw(CLException&);
+    T getInfoValue(cl_event_info info) const throw(CLException&);
 
-    static void CL_CALLBACK _event_notify(cl_event event_, cl_int exec_status_, void* user_data_);
+    static void CL_CALLBACK event_notify(cl_event event, cl_int exec_status, void* user_data);
 };
 
 
 typedef QList<CLEvent> CLEventList;
-
-
-template<class T>
-T CLEvent::_getInfoValue(cl_event_info info_) const throw(CLException&)
-{
-    T res;
-    CL_ERR_THROW(clGetEventInfo(_id, info_, sizeof(T),
-                        static_cast<void*>(&res), NULL));
-    return res;
-}
 
 #endif // CLEVENT_H

@@ -19,14 +19,14 @@ Log& Log::instance()
     return log_inst;
 }
 
-void Log::add(Log::MsgType type_, const QString &who_, const QString &msg_)
+void Log::add(Log::MsgType type, const QString &who, const QString &msg)
 {
-    emit log(type_, who_, msg_);
+    emit log(type, who, msg);
 }
 
 
-void log(Log::MsgType msg_type_, const QString& who_, const QString& msg_)
+void log(Log::MsgType msg_type, const QString& who, const QString& msg)
 {
-    Log::instance().add(msg_type_, who_, msg_);
+    Log::instance().add(msg_type, who, msg);
 }
 

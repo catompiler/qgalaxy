@@ -12,17 +12,17 @@
 
 CLContext::CLContext()
 {
-    _id = NULL;
+    m_id = NULL;
 }
 
-CLContext::CLContext(const cl_context &context_id_)
+CLContext::CLContext(const cl_context &context_id)
 {
-    _id = context_id_;
+    m_id = context_id;
 }
 
-CLContext::CLContext(const CLContext &context_)
+CLContext::CLContext(const CLContext &context)
 {
-    _id = context_._id;
+    m_id = context.m_id;
 }
 
 CLContext::~CLContext()
@@ -31,46 +31,46 @@ CLContext::~CLContext()
 
 cl_context CLContext::id() const
 {
-    return _id;
+    return m_id;
 }
 
-void CLContext::setId(const cl_context &id_)
+void CLContext::setId(const cl_context &cxt_id)
 {
-    _id = id_;
+    m_id = cxt_id;
 }
 
 bool CLContext::isValid() const
 {
-    return _id != NULL;
+    return m_id != NULL;
 }
 
-bool CLContext::create(const CLPlatform &platform_, const CLDeviceList &devices_,
-                       bool shared_with_gl_, cl_int* err_code_) throw(CLException&)
+bool CLContext::create(const CLPlatform &platform, const CLDeviceList &devices,
+                       bool shared_with_gl, cl_int* err_code) throw(CLException&)
 {
     static const char* gl_sharing_ext_name = "cl_khr_gl_sharing";
 
-    if(devices_.empty()) return false;
-
-    QVector<cl_context_properties> properties;
-    QVector<cl_device_id> devices;
-
-    for(CLDeviceList::const_iterator it = devices_.begin(); it != devices_.end(); ++ it){
-        if(shared_with_gl_ && !(*it).hasExtension(gl_sharing_ext_name))
-            continue;
-        devices.push_back((*it).id());
-    }
-
     if(devices.empty()) return false;
 
-    properties.push_back(CL_CONTEXT_PLATFORM);
-    properties.push_back(reinterpret_cast<cl_context_properties>(platform_.id()));
+    QVector<cl_context_properties> properties_vec;
+    QVector<cl_device_id> devices_vec;
 
-    if(shared_with_gl_){
+    for(CLDeviceList::const_iterator it = devices.begin(); it != devices.end(); ++ it){
+        if(shared_with_gl && !(*it).hasExtension(gl_sharing_ext_name))
+            continue;
+        devices_vec.push_back((*it).id());
+    }
+
+    if(devices_vec.empty()) return false;
+
+    properties_vec.push_back(CL_CONTEXT_PLATFORM);
+    properties_vec.push_back(reinterpret_cast<cl_context_properties>(platform.id()));
+
+    if(shared_with_gl){
             #ifdef Q_WS_X11
-            properties.push_back(CL_GL_CONTEXT_KHR);
-            properties.push_back(reinterpret_cast<cl_context_properties>(glXGetCurrentContext()));
-            properties.push_back(CL_GLX_DISPLAY_KHR);
-            properties.push_back(reinterpret_cast<cl_context_properties>(glXGetCurrentDisplay()));
+            properties_vec.push_back(CL_GL_CONTEXT_KHR);
+            properties_vec.push_back(reinterpret_cast<cl_context_properties>(glXGetCurrentContext()));
+            properties_vec.push_back(CL_GLX_DISPLAY_KHR);
+            properties_vec.push_back(reinterpret_cast<cl_context_properties>(glXGetCurrentDisplay()));
             #endif
 
             #ifdef Q_WS_WIN
@@ -81,91 +81,118 @@ bool CLContext::create(const CLPlatform &platform_, const CLDeviceList &devices_
             #endif
     }
 
-    properties.push_back(0);
+    properties_vec.push_back(0);
 
     cl_int res = CL_SUCCESS;
 
-    _id = clCreateContext(properties.data(), devices.size(), devices.data(), NULL, NULL, &res);
-    if(err_code_) *err_code_ = res;
+    m_id = clCreateContext(properties_vec.data(), devices_vec.size(), devices_vec.data(), NULL, NULL, &res);
+    if(err_code) *err_code = res;
 
     CL_ERR_THROW(res);
 
-    return _id != NULL;
+    return m_id != NULL;
 }
 
 bool CLContext::retain() throw(CLException&)
 {
-    CL_ERR_THROW(clRetainContext(_id));
+    CL_ERR_THROW(clRetainContext(m_id));
     return true;
 }
 
 bool CLContext::release() throw(CLException&)
 {
-    CL_ERR_THROW(clReleaseContext(_id));
+    CL_ERR_THROW(clReleaseContext(m_id));
     return true;
 }
 
 size_t CLContext::devicesCount() const throw(CLException&)
 {
-    return _getInfoValue<cl_uint>(CL_CONTEXT_NUM_DEVICES);
+    return getInfoValue<cl_uint>(CL_CONTEXT_NUM_DEVICES);
 }
 
 QList<CLDevice> CLContext::devices() const throw(CLException&)
 {
     QList<CLDevice> res;
-    QVector<cl_device_id> dev_ids = _getInfoValuev<cl_device_id>(CL_CONTEXT_DEVICES);
+    QVector<cl_device_id> dev_ids = getInfoValuev<cl_device_id>(CL_CONTEXT_DEVICES);
     for(QVector<cl_device_id>::iterator it = dev_ids.begin(); it != dev_ids.end(); ++ it){
         res.push_back(CLDevice(*it));
     }
     return res;
 }
 
-CLContext &CLContext::operator =(const CLContext &cxt_)
+CLContext &CLContext::operator =(const CLContext &cxt)
 {
-    _id = cxt_._id;
+    m_id = cxt.m_id;
     return *this;
 }
 
-bool CLContext::operator ==(const CLContext &cxt_) const
+bool CLContext::operator ==(const CLContext &cxt) const
 {
-    return _id == cxt_._id;
+    return m_id == cxt.m_id;
 }
 
-CLEvent CLContext::createEvent(cl_int *err_code_) const throw(CLException&)
+CLEvent CLContext::createEvent(cl_int *err_code) const throw(CLException&)
 {
     CLEvent res_event;
     cl_int res = CL_SUCCESS;
 
     res_event.create(*this, &res);
 
-    if(err_code_) *err_code_ = res;
+    if(err_code) *err_code = res;
     CL_ERR_THROW(res);
 
     return res_event;
 }
 
-CLCommandQueue CLContext::createCommandQueue(const CLDevice &device_, cl_int *err_code_) const throw(CLException&)
+CLCommandQueue CLContext::createCommandQueue(const CLDevice &device, cl_int *err_code) const throw(CLException&)
 {
     CLCommandQueue res_queue;
     cl_int res = CL_SUCCESS;
 
-    res_queue.create(*this, device_, &res);
+    res_queue.create(*this, device, &res);
 
-    if(err_code_) *err_code_ = res;
+    if(err_code) *err_code = res;
     CL_ERR_THROW(res);
 
     return res_queue;
 }
 
-CLBuffer CLContext::createBuffer(cl_mem_flags flags_, size_t size_, void *host_ptr_, cl_int *err_code_) throw(CLException&)
+CLBuffer CLContext::createBuffer(cl_mem_flags flags, size_t size, void *host_ptr, cl_int *err_code) throw(CLException&)
 {
     CLBuffer res_buffer;
     cl_int res = CL_SUCCESS;
 
-    res_buffer.create(*this, flags_, size_, host_ptr_, &res);
-    if(err_code_) *err_code_ = res;
+    res_buffer.create(*this, flags, size, host_ptr, &res);
+    if(err_code) *err_code = res;
 
     CL_ERR_THROW(res);
 
     return res_buffer;
+}
+
+template<class T>
+T CLContext::getInfoValue(cl_device_info info) const throw(CLException&)
+{
+    T res;
+    CL_ERR_THROW(clGetContextInfo(m_id, info, sizeof(T),
+                        static_cast<void*>(&res), NULL));
+    return res;
+}
+
+template<class T>
+QVector<T> CLContext::getInfoValuev(cl_context_info info) const throw(CLException&)
+{
+    size_t size = 0;
+
+    CL_ERR_THROW(clGetContextInfo(m_id, info, 0, NULL, &size));
+
+    size_t vec_size = size / sizeof(T);
+    if(vec_size == 0) vec_size = 1;
+
+    QVector<T> res(vec_size);
+
+    CL_ERR_THROW(clGetContextInfo(m_id, info, size,
+                        static_cast<void*>(res.data()), NULL));
+
+    return res;
 }

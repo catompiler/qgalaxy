@@ -22,28 +22,30 @@ public:
     explicit OCLSettingsDialog(QWidget *parent = 0);
     ~OCLSettingsDialog();
 
-    void setCurrentPlatform(const CLPlatform& platform_);
+    void setCurrentPlatform(const CLPlatform& platform);
     CLPlatform currentPlatform() const;
 
-    void setCurrentDevice(const CLDevice& device_);
+    void setCurrentDevice(const CLDevice& device);
     CLDevice currentDevice() const;
 
-    void setBodiesCount(size_t count_);
+    void setBodiesCount(size_t count);
     size_t bodiesCount() const;
 
 private slots:
+    void on_cbPlatform_currentIndexChanged(int index);
+    void on_cbDevice_currentIndexChanged(int index);
 
 private:
     Ui::OCLSettingsDialog *ui;
 
-    int _platformIndex(const CLPlatform& platform_);
-    int _deviceIndex(const CLDevice& device_);
+    int platformIndex(const CLPlatform& platform);
+    int deviceIndex(const CLDevice& device);
 
-    void _refreshUi();
-    void _populateLists();
-    void _populatePlatforms();
-    void _populateDevices(const CLPlatform& platform_);
-    void _updateDeviceInfo(const CLDevice& device_);
+    void refreshUi();
+    void populateLists();
+    void populatePlatforms();
+    void populateDevices(const CLPlatform& platform);
+    void updateDeviceInfo(const CLDevice& device);
 };
 
 #endif // OCLSETTINGSDIALOG_H

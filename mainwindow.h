@@ -26,18 +26,17 @@ public slots:
     void addlog(Log::MsgType type_, const QString& who_, const QString& msg_);
 
 private slots:
-    void on_twMain_tabCloseRequested(int index);
     void on_actExit_triggered();
     void on_actSettingsOCL_triggered();
     void on_actSimNew_triggered();
     void on_actSimEnd_triggered();
 
 private:
-    void _refreshUi();
+    void refreshUi();
 
     Ui::MainWindow *ui;
 
-    OCLSettingsDialog* _oclSettingsDlg;
+    OCLSettingsDialog* oclSettingsDlg;
 };
 
 #endif // MAINWINDOW_H

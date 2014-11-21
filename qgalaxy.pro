@@ -9,6 +9,8 @@ QT       += core gui opengl
 TARGET = qgalaxy
 TEMPLATE = app
 
+QMAKE_CXXFLAGS += -std=c++11
+
 LIBS += -L/usr/X11R6/lib64 -lGL -lOpenCL
 
 SOURCES += main.cpp\

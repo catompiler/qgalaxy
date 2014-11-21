@@ -18,13 +18,13 @@ public:
 signals:
     void log(Log::MsgType, const QString&, const QString&);
 public slots:
-    void add(Log::MsgType type_, const QString& who_, const QString& msg_);
+    void add(Log::MsgType type, const QString& who, const QString& msg);
 
 private:
     explicit Log(QObject *parent = 0);
     ~Log();
 };
 
-void log(Log::MsgType msg_type_, const QString& who_, const QString& msg_);
+void log(Log::MsgType msg_type, const QString& who, const QString& msg);
 
 #endif // LOG_H

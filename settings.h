@@ -18,13 +18,13 @@ public:
     void write();
 
     size_t bodiesCount() const;
-    void setBodiesCount(size_t bodies_count_);
+    void setBodiesCount(size_t bodies);
 
     QString clPlatformName() const;
-    void setClPlatformName(const QString& name_);
+    void setClPlatformName(const QString& name);
 
     QString clDeviceName() const;
-    void setClDeviceName(const QString& name_);
+    void setClDeviceName(const QString& name);
     
 signals:
     void settingsChanged();
@@ -35,9 +35,9 @@ private:
     Settings();
     ~Settings();
 
-    size_t _bodies_count;
-    QString _cl_platform_name;
-    QString _cl_device_name;
+    size_t bodies_count;
+    QString cl_platform_name;
+    QString cl_device_name;
 };
 
 #endif // SETTINGS_H

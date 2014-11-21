@@ -16,12 +16,12 @@ class CLPlatform
 {
 public:
     CLPlatform();
-    explicit CLPlatform(const cl_platform_id& platform_id_);
-    CLPlatform(const CLPlatform& platform_);
+    explicit CLPlatform(const cl_platform_id& platform_id);
+    CLPlatform(const CLPlatform& platform);
     ~CLPlatform();
 
     cl_platform_id id() const;
-    void setId(const cl_platform_id& id_);
+    void setId(const cl_platform_id& platform_id);
 
     bool isValid() const;
 
@@ -33,23 +33,23 @@ public:
 
     vendor::id_t vendorId() const throw(CLException&);
 
-    bool hasExtension(const QString& ext_name_) const throw(CLException&);
+    bool hasExtension(const QString& ext_name) const throw(CLException&);
 
     static size_t count() throw(CLException&);
     static QList<CLPlatform> getPlatforms() throw(CLException&);
     static CLPlatform byName(const QString& name_) throw(CLException&);
 
     size_t devicesCount() const throw(CLException&);
-    size_t devicesCount(cl_device_type device_type_) const throw(CLException&);
+    size_t devicesCount(cl_device_type device_type) const throw(CLException&);
     QList<CLDevice> getDevices() const throw(CLException&);
-    QList<CLDevice> getDevices(cl_device_type device_type_) const throw(CLException&);
-    CLDevice deviceByName(const QString& name_) const throw(CLException&);
+    QList<CLDevice> getDevices(cl_device_type device_type) const throw(CLException&);
+    CLDevice deviceByName(const QString& dev_name) const throw(CLException&);
 
-    CLPlatform& operator=(const CLPlatform& platform_);
-    bool operator==(const CLPlatform& platform_) const;
+    CLPlatform& operator=(const CLPlatform& platform);
+    bool operator==(const CLPlatform& platform) const;
 private:
-    cl_platform_id _id;
-    QString _getInfoValueStr(cl_platform_info info_) const throw(CLException&);
+    cl_platform_id m_id;
+    QString getInfoValueStr(cl_platform_info info_) const throw(CLException&);
 };
 
 Q_DECLARE_METATYPE(CLPlatform)

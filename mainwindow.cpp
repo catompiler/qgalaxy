@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include <QTextCursor>
 #include <QDebug>
+#include "clplatform.h"
+#include "cldevice.h"
 #include "galaxyviewwidget.h"
 #include "log.h"
 #include "settings.h"
@@ -25,14 +27,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&Log::instance(), SIGNAL(log(Log::MsgType,QString,QString)),
             this, SLOT(addlog(Log::MsgType,QString,QString)));
 
-    _oclSettingsDlg = NULL;
+    oclSettingsDlg = nullptr;
 
-    _refreshUi();
+    refreshUi();
 }
 
 MainWindow::~MainWindow()
 {
-    delete _oclSettingsDlg;
+    delete oclSettingsDlg;
     delete ui;
 }
 
@@ -62,18 +64,44 @@ void MainWindow::addlog(Log::MsgType type_, const QString& who_, const QString &
                                          QTextCursor::MoveAnchor, 1);
 }
 
-void MainWindow::on_twMain_tabCloseRequested(int index)
-{
-}
-
 void MainWindow::on_actExit_triggered()
 {
     qApp->quit();
-    //_refreshUi();
 }
 
 void MainWindow::on_actSettingsOCL_triggered()
 {
+    if(!oclSettingsDlg) oclSettingsDlg = new OCLSettingsDialog(this);
+
+    try{
+
+        CLPlatform platform = CLPlatform::byName(Settings::get().clPlatformName());
+        oclSettingsDlg->setCurrentPlatform(platform);
+
+        CLDevice device = platform.deviceByName(Settings::get().clDeviceName());
+        oclSettingsDlg->setCurrentDevice(device);
+
+    }catch(CLException& e){
+        log(Log::ERROR, LOG_WHO, e.what());
+        QMessageBox::critical(this, tr("Ошибка!"), e.what());
+    }
+
+    oclSettingsDlg->setBodiesCount(Settings::get().bodiesCount());
+
+    if(oclSettingsDlg->exec() == QDialog::Accepted){
+
+        try{
+
+            Settings::get().setClPlatformName(oclSettingsDlg->currentPlatform().name());
+            Settings::get().setClDeviceName(oclSettingsDlg->currentDevice().name());
+
+        }catch(CLException& e){
+            log(Log::ERROR, LOG_WHO, e.what());
+            QMessageBox::critical(this, tr("Ошибка!"), e.what());
+        }
+
+        Settings::get().setBodiesCount(oclSettingsDlg->bodiesCount());
+    }
 }
 
 void MainWindow::on_actSimNew_triggered()
@@ -84,9 +112,8 @@ void MainWindow::on_actSimEnd_triggered()
 {
 }
 
-void MainWindow::_refreshUi()
+void MainWindow::refreshUi()
 {
-    ui->actSimEnd->setEnabled(ui->twMain->count() != 0);
 }
 
 

@@ -11,18 +11,18 @@ class CLException
 {
 public:
     CLException() throw();
-    CLException(const QString& what_, cl_int err_code_) throw();
+    CLException(const QString& what_str, cl_int err_code) throw();
     ~CLException() throw();
 
     const char* what() const throw();
     cl_int errorCode() const throw();
 
-    static CLException make(cl_int err_code_);
-    static CLException make(const QString& what_, cl_int err_code_);
+    static CLException make(cl_int err_code);
+    static CLException make(const QString& what_str, cl_int err_code);
 
 protected:
-    QString _what;
-    cl_int _err_code;
+    QString m_what;
+    cl_int m_err_code;
 };
 
 #endif // CLEXCEPTION_H
