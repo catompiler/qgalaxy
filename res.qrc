@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>exit.png</file>
+        <file>opencl_icon.png</file>
+        <file>device_cpu.png</file>
+        <file>device_gpu.png</file>
+        <file>vendor_amd.png</file>
+        <file>vendor_atiamd.png</file>
+        <file>vendor_intel.png</file>
+        <file>vendor_nvidia.png</file>
+        <file>run.png</file>
+        <file>stop.png</file>
+    </qresource>
+</RCC>
