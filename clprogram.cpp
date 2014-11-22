@@ -99,6 +99,11 @@ QString CLProgram::buildLog(const CLDevice &device) const
     return getBuildInfoValueStr(device, CL_PROGRAM_BUILD_LOG);
 }
 
+QString CLProgram::source() const
+{
+    return getInfoValueStr(CL_PROGRAM_SOURCE);
+}
+
 cl_context CLProgram::contextId() const
 {
     return getInfoValue<cl_context>(CL_PROGRAM_CONTEXT);

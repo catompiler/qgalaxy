@@ -8,10 +8,10 @@
 #include <QDebug>
 #include "clplatform.h"
 #include "cldevice.h"
-#include "galaxyviewwidget.h"
 #include "log.h"
 #include "settings.h"
 #include "oclsettingsdialog.h"
+#include "nbodywidget.h"
 
 
 
@@ -27,6 +27,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&Log::instance(), SIGNAL(log(Log::MsgType,QString,QString)),
             this, SLOT(addlog(Log::MsgType,QString,QString)));
 
+    nbodyWidget = new NBodyWidget(this);
+    setCentralWidget(nbodyWidget);
+
     oclSettingsDlg = nullptr;
 
     refreshUi();
@@ -35,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete oclSettingsDlg;
+    delete nbodyWidget;
     delete ui;
 }
 

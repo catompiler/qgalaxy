@@ -50,6 +50,18 @@ bool CLBuffer::create(const CLContext &cxt, cl_mem_flags flags, size_t size, voi
     return m_id != nullptr;
 }
 
+bool CLBuffer::createFromGLBuffer(const CLContext &cxt, cl_mem_flags flags, GLuint glbuf_id, cl_int *err_code)
+{
+    cl_int res = CL_SUCCESS;
+
+    m_id = clCreateFromGLBuffer(cxt.id(), flags,glbuf_id, &res);
+    if(err_code) *err_code = res;
+
+    CL_ERR_THROW(res);
+
+    return m_id != nullptr;
+}
+
 bool CLBuffer::retain()
 {
     CL_ERR_THROW(clRetainMemObject(m_id));
@@ -59,6 +71,56 @@ bool CLBuffer::retain()
 bool CLBuffer::release()
 {
     CL_ERR_THROW(clReleaseMemObject(m_id));
+    return true;
+}
+
+bool CLBuffer::enqueueAcquireGLObject(const CLCommandQueue &queue, const CLEventList *wait_events, CLEvent *event)
+{
+    QVector<cl_event> wait_events_vec;
+    const cl_event* wait_events_ptr = nullptr;
+
+    cl_event event_id = nullptr;
+    cl_event* event_id_ptr = nullptr;
+
+    if(wait_events){
+        for(CLEventList::const_iterator it = wait_events->begin(); it != wait_events->end(); ++ it){
+            wait_events_vec.push_back((*it).id());
+        }
+    }
+
+    if(!wait_events_vec.empty()) wait_events_ptr = wait_events_vec.data();
+
+    if(event) event_id_ptr = &event_id;
+
+    CL_ERR_THROW(clEnqueueAcquireGLObjects(queue.id(), 1, &m_id, wait_events_vec.size(), wait_events_ptr, event_id_ptr));
+
+    if(event) event->setId(event_id);
+
+    return true;
+}
+
+bool CLBuffer::enqueueReleaseGLObject(const CLCommandQueue &queue, const CLEventList *wait_events, CLEvent *event)
+{
+    QVector<cl_event> wait_events_vec;
+    const cl_event* wait_events_ptr = nullptr;
+
+    cl_event event_id = nullptr;
+    cl_event* event_id_ptr = nullptr;
+
+    if(wait_events){
+        for(CLEventList::const_iterator it = wait_events->begin(); it != wait_events->end(); ++ it){
+            wait_events_vec.push_back((*it).id());
+        }
+    }
+
+    if(!wait_events_vec.empty()) wait_events_ptr = wait_events_vec.data();
+
+    if(event) event_id_ptr = &event_id;
+
+    CL_ERR_THROW(clEnqueueReleaseGLObjects(queue.id(), 1, &m_id, wait_events_vec.size(), wait_events_ptr, event_id_ptr));
+
+    if(event) event->setId(event_id);
+
     return true;
 }
 

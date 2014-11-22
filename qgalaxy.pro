@@ -15,7 +15,6 @@ LIBS += -L/usr/X11R6/lib64 -lGL -lOpenCL
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    galaxyviewwidget.cpp \
     log.cpp \
     clglnbody.cpp \
     settings.cpp \
@@ -28,10 +27,12 @@ SOURCES += main.cpp\
     oclsettingsdialog.cpp \
     vendor.cpp \
     clexception.cpp \
-    clprogram.cpp
+    clprogram.cpp \
+    clkernel.cpp \
+    nbodywidget.cpp \
+    nbody.cpp
 
 HEADERS  += mainwindow.h \
-    galaxyviewwidget.h \
     log.h \
     clglnbody.h \
     settings.h \
@@ -45,7 +46,10 @@ HEADERS  += mainwindow.h \
     vendor.h \
     clexception.h \
     utils.h \
-    clprogram.h
+    clprogram.h \
+    clkernel.h \
+    nbodywidget.h \
+    nbody.h
 
 FORMS    += mainwindow.ui \
     oclsettingsdialog.ui

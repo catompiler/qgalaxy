@@ -12,6 +12,10 @@
 #include "clexception.h"
 
 
+/**
+ * @class CLPlatform.
+ * @brief Класс платформы OpenCL.
+ */
 class CLPlatform
 {
 public:

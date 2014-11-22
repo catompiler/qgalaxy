@@ -11,7 +11,10 @@
 
 class CLContext;
 
-
+/**
+ * @class CLEvent.
+ * @brief Класс события OpenCL.
+ */
 class CLEvent : public QObject
 {
     Q_OBJECT

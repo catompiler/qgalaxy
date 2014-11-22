@@ -61,6 +61,18 @@ bool CLCommandQueue::release()
     return true;
 }
 
+bool CLCommandQueue::flush()
+{
+    CL_ERR_THROW(clFlush(m_id));
+    return true;
+}
+
+bool CLCommandQueue::finish()
+{
+    CL_ERR_THROW(clFinish(m_id));
+    return true;
+}
+
 cl_context CLCommandQueue::contextId() const
 {
     return getInfoValue<cl_context>(CL_QUEUE_CONTEXT);

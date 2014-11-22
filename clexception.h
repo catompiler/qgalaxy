@@ -10,12 +10,12 @@ class CLException
         :public std::exception
 {
 public:
-    CLException() throw();
-    CLException(const QString& what_str, cl_int err_code) throw();
-    ~CLException() throw();
+    CLException() noexcept;
+    CLException(const QString& what_str, cl_int err_code) noexcept;
+    ~CLException() noexcept;
 
-    const char* what() const throw();
-    cl_int errorCode() const throw();
+    const char* what() const noexcept;
+    cl_int errorCode() const noexcept;
 
     static CLException make(cl_int err_code);
     static CLException make(const QString& what_str, cl_int err_code);

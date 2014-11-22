@@ -5,7 +5,7 @@
 #include "log.h"
 
 class QString;
-class GalaxyViewWidget;
+class NBodyWidget;
 class OCLSettingsDialog;
 
 namespace Ui {
@@ -35,6 +35,8 @@ private:
     void refreshUi();
 
     Ui::MainWindow *ui;
+
+    NBodyWidget* nbodyWidget;
 
     OCLSettingsDialog* oclSettingsDlg;
 };

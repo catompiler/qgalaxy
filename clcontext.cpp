@@ -172,6 +172,19 @@ CLBuffer CLContext::createBuffer(cl_mem_flags flags, size_t size, void *host_ptr
     return res_buffer;
 }
 
+CLBuffer CLContext::createBufferFromGLBuffer(cl_mem_flags flags, GLuint glbuf_id, cl_int *err_code) const
+{
+    CLBuffer res_buffer;
+    cl_int res = CL_SUCCESS;
+
+    res_buffer.createFromGLBuffer(*this, flags, glbuf_id, &res);
+    if(err_code) *err_code = res;
+
+    CL_ERR_THROW(res);
+
+    return res_buffer;
+}
+
 template<class T>
 T CLContext::getInfoValue(cl_device_info info) const
 {

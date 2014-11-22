@@ -8,7 +8,7 @@ class CLDevice;
 
 /**
  * @class CLCommandQueue.
- * @brief Ксласс очереди команд OpenCL.
+ * @brief Класс очереди команд OpenCL.
  */
 class CLCommandQueue
 {
@@ -80,6 +80,20 @@ public:
     bool release();
 
     /**
+     * @brief Отправляет команды в очереди OpenCL на устройство OpenCL.
+     * @return true в случае успеха, иначе false.
+     * @throw CLException в случае ошибки.
+     */
+    bool flush();
+
+    /**
+     * @brief Ждёт завершения выполнения команд в очереди OpenCL.
+     * @return true в случае успеха, иначе false.
+     * @throw CLException в случае ошибки.
+     */
+    bool finish();
+
+    /**
      * @brief Получение идентификатора контекста OpenCL.
      * @return Идентификатор контекста OpenCL.
      * @throw CLException в случае ошибки.
@@ -102,7 +116,7 @@ public:
     /**
      * @brief Оператор сравнения.
      * @param cq Очередь команд OpenCL.
-     * @return true, если Идентификаторы буферов равны, иначе false.
+     * @return true, если Идентификаторы очереди команд равны, иначе false.
      */
     bool operator==(const CLCommandQueue& cq) const;
 

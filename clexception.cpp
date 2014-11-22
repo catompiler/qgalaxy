@@ -3,28 +3,28 @@
 
 
 
-CLException::CLException() throw()
+CLException::CLException() noexcept
     :std::exception()
 {
 }
 
-CLException::CLException(const QString &what_str, cl_int err_code) throw()
+CLException::CLException(const QString &what_str, cl_int err_code) noexcept
     :std::exception()
 {
     m_what = what_str;
     m_err_code = err_code;
 }
 
-CLException::~CLException() throw()
+CLException::~CLException() noexcept
 {
 }
 
-const char *CLException::what() const throw()
+const char *CLException::what() const noexcept
 {
     return m_what.toUtf8().data();
 }
 
-cl_int CLException::errorCode() const throw()
+cl_int CLException::errorCode() const noexcept
 {
     return m_err_code;
 }

@@ -137,8 +137,17 @@ public:
      * @return Буфер OpenCL.
      * @throw CLException в случае ошибки.
      */
-    CLBuffer createBuffer(cl_mem_flags flags, size_t size,
-                          void* host_ptr, cl_int* err_code = nullptr) const;
+    CLBuffer createBuffer(cl_mem_flags flags, size_t size, void* host_ptr, cl_int* err_code = nullptr) const;
+
+    /**
+     * @brief Создание буфера OpenCL из буфера OpenGL.
+     * @param flags Флаги буфера OpenCL.
+     * @param glbuf_id Идентификатор буфера OpenGL.
+     * @param err_code Код ошибки OpenCL.
+     * @return Буфер OpenCL.
+     * @throw CLException в случае ошибки.
+     */
+    CLBuffer createBufferFromGLBuffer(cl_mem_flags flags, GLuint glbuf_id, cl_int* err_code = nullptr) const;
 
 private:
 

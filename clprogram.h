@@ -10,7 +10,7 @@ class CLContext;
 
 /**
  * @class CLProgram.
- * @brief Ксласс программы OpenCL.
+ * @brief Класс программы OpenCL.
  */
 class CLProgram
 {
@@ -108,6 +108,13 @@ public:
     QString buildLog(const CLDevice& device) const;
 
     /**
+     * @brief Получение исходного кода программы OpenCL.
+     * @return Иходный код программы OpenCL.
+     * @throw CLException в случае ошибки.
+     */
+    QString source() const;
+
+    /**
      * @brief Получение идентификатора контекста OpenCL.
      * @return Идентификатор контекста OpenCL.
      * @throw CLException в случае ошибки.
@@ -138,7 +145,7 @@ public:
     /**
      * @brief Оператор сравнения.
      * @param prog Программа OpenCL.
-     * @return true, если Идентификаторы буферов равны, иначе false.
+     * @return true, если Идентификаторы программ равны, иначе false.
      */
     bool operator==(const CLProgram& prog) const;
 

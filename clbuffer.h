@@ -2,6 +2,7 @@
 #define CLBUFFER_H
 
 #include <CL/opencl.h>
+#include <GL/gl3.h>
 #include "clevent.h"
 
 class CLContext;
@@ -69,6 +70,17 @@ public:
                 void* host_ptr, cl_int* err_code = nullptr);
 
     /**
+     * @brief Создание буфера OpenCL из буфера OpenGL.
+     * @param cxt Контекст OpenCL.
+     * @param flags Флаги буфера OpenCL.
+     * @param glbuf_id Идентификатор буфера OpenGL.
+     * @param err_code Код ошибки OpenCL.
+     * @return true в случае успеха, иначе false.
+     * @throw CLException в случае ошибки.
+     */
+    bool createFromGLBuffer(const CLContext& cxt, cl_mem_flags flags, GLuint glbuf_id, cl_int* err_code = nullptr);
+
+    /**
      * @brief Увеличение числа ссылок на объект.
      * @return true в случае успеха, иначе false.
      * @throw CLException в случае ошибки.
@@ -82,6 +94,26 @@ public:
      * @throw CLException в случае ошибки.
      */
     bool release();
+
+    /**
+     * @brief Захватывает объект OpenGL, на основе которого создан буфер OpenCL.
+     * @param queue Очередь комманд OpenCL.
+     * @param wait_events Список событий для ожидания.
+     * @param event Отслеживающее событие.
+     * @return true в случае успеха, иначе false.
+     * @throw CLException в случае ошибки.
+     */
+    bool enqueueAcquireGLObject(const CLCommandQueue& queue, const CLEventList* wait_events = nullptr, CLEvent* event = nullptr);
+
+    /**
+     * @brief Освобождает объект OpenGL, на основе которого создан буфер OpenCL.
+     * @param queue Очередь комманд OpenCL.
+     * @param wait_events Список событий для ожидания.
+     * @param event Отслеживающее событие.
+     * @return true в случае успеха, иначе false.
+     * @throw CLException в случае ошибки.
+     */
+    bool enqueueReleaseGLObject(const CLCommandQueue& queue, const CLEventList* wait_events = nullptr, CLEvent* event = nullptr);
 
     /**
      * @brief Получение флагов буфера OpenCL.
