@@ -4,7 +4,7 @@
 
 CLPlatform::CLPlatform()
 {
-    m_id = NULL;
+    m_id = nullptr;
 }
 
 CLPlatform::CLPlatform(const cl_platform_id &platform_id)
@@ -33,7 +33,7 @@ void CLPlatform::setId(const cl_platform_id &platform_id)
 
 bool CLPlatform::isValid() const
 {
-    return m_id != NULL;
+    return m_id != nullptr;
 }
 
 QString CLPlatform::profile() const throw(CLException&)
@@ -74,7 +74,7 @@ bool CLPlatform::hasExtension(const QString &ext_name) const throw(CLException&)
 size_t CLPlatform::count() throw(CLException&)
 {
     cl_uint platforms_count;
-    CL_ERR_THROW(clGetPlatformIDs(0, NULL, &platforms_count));
+    CL_ERR_THROW(clGetPlatformIDs(0, nullptr, &platforms_count));
     return platforms_count;
 }
 
@@ -87,7 +87,7 @@ QList<CLPlatform> CLPlatform::getPlatforms() throw(CLException&)
     if(platforms_count == 0) return res;
 
     cl_platform_id platform_ids[platforms_count];
-    CL_ERR_THROW(clGetPlatformIDs(platforms_count, platform_ids, NULL));
+    CL_ERR_THROW(clGetPlatformIDs(platforms_count, platform_ids, nullptr));
 
     for(size_t i = 0; i < platforms_count; i ++){
         res.push_back(CLPlatform(platform_ids[i]));
@@ -121,7 +121,7 @@ size_t CLPlatform::devicesCount() const throw(CLException&)
 size_t CLPlatform::devicesCount(cl_device_type device_type) const throw(CLException&)
 {
     cl_uint devs_count;
-    CL_ERR_THROW(clGetDeviceIDs(m_id, device_type, 0, NULL, &devs_count));
+    CL_ERR_THROW(clGetDeviceIDs(m_id, device_type, 0, nullptr, &devs_count));
     return devs_count;
 }
 
@@ -139,7 +139,7 @@ QList<CLDevice> CLPlatform::getDevices(cl_device_type device_type) const throw(C
     if(devs_count == 0) return res;
 
     cl_device_id dev_ids[devs_count];
-    CL_ERR_THROW(clGetDeviceIDs(m_id, device_type, devs_count, dev_ids, NULL));
+    CL_ERR_THROW(clGetDeviceIDs(m_id, device_type, devs_count, dev_ids, nullptr));
 
     for(size_t i = 0; i < devs_count; i ++){
         res.push_back(CLDevice(dev_ids[i]));
@@ -158,16 +158,16 @@ bool CLPlatform::operator ==(const CLPlatform &platform) const
     return m_id == platform.m_id;
 }
 
-QString CLPlatform::getInfoValueStr(cl_platform_info info_) const throw(CLException&)
+QString CLPlatform::getInfoValueStr(cl_platform_info info) const
 {
     size_t len = 0;
 
-    CL_ERR_THROW(clGetPlatformInfo(m_id, info_, 0, NULL, &len));
+    CL_ERR_THROW(clGetPlatformInfo(m_id, info, 0, nullptr, &len));
 
     char res_str[len];
 
-    CL_ERR_THROW(clGetPlatformInfo(m_id, info_, len,
-            static_cast<void*>(res_str), NULL));
+    CL_ERR_THROW(clGetPlatformInfo(m_id, info, len,
+            static_cast<void*>(res_str), nullptr));
 
     return QString(res_str);
 }

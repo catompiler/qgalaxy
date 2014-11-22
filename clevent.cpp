@@ -6,7 +6,7 @@
 CLEvent::CLEvent(QObject *parent) :
     QObject(parent)
 {
-    m_setId(NULL);
+    m_setId(nullptr);
 }
 
 CLEvent::CLEvent(const cl_event &event_id, QObject *parent) :
@@ -37,10 +37,10 @@ void CLEvent::setId(const cl_event &event_id)
 
 bool CLEvent::isValid() const
 {
-    return m_id != NULL;
+    return m_id != nullptr;
 }
 
-bool CLEvent::create(const CLContext &cxt, cl_int *err_code) throw(CLException&)
+bool CLEvent::create(const CLContext &cxt, cl_int *err_code)
 {
     cl_int res;
 
@@ -49,33 +49,39 @@ bool CLEvent::create(const CLContext &cxt, cl_int *err_code) throw(CLException&)
 
     CL_ERR_THROW(res);
 
-    return m_id != NULL;
+    return m_id != nullptr;
 }
 
-bool CLEvent::retain() throw(CLException&)
+bool CLEvent::retain()
 {
     CL_ERR_THROW(clRetainEvent(m_id));
     return true;
 }
 
-cl_int CLEvent::status() const throw(CLException&)
+bool CLEvent::release()
+{
+    CL_ERR_THROW(clReleaseEvent(m_id));
+    return true;
+}
+
+cl_int CLEvent::status() const
 {
     return getInfoValue<cl_int>(CL_EVENT_COMMAND_EXECUTION_STATUS);
 }
 
-bool CLEvent::setStatus(cl_int status) throw(CLException&)
+bool CLEvent::setStatus(cl_int status)
 {
     CL_ERR_THROW(clSetUserEventStatus(m_id, status));
     return true;
 }
 
-bool CLEvent::wait() const throw(CLException&)
+bool CLEvent::wait() const
 {
     CL_ERR_THROW(clWaitForEvents(1, &m_id));
     return true;
 }
 
-bool CLEvent::waitForEvents(const QList<CLEvent> &events) throw(CLException&)
+bool CLEvent::waitForEvents(const QList<CLEvent> &events)
 {
     if(events.size() == 0) return false;
     QVector<cl_event> events_vec;
@@ -86,17 +92,17 @@ bool CLEvent::waitForEvents(const QList<CLEvent> &events) throw(CLException&)
     return true;
 }
 
-cl_command_queue CLEvent::commandQueueId() const throw(CLException&)
+cl_command_queue CLEvent::commandQueueId() const
 {
     return getInfoValue<cl_command_queue>(CL_EVENT_COMMAND_QUEUE);
 }
 
-cl_context CLEvent::contextId() const throw(CLException&)
+cl_context CLEvent::contextId() const
 {
     return getInfoValue<cl_context>(CL_EVENT_CONTEXT);
 }
 
-cl_command_type CLEvent::commandType() const throw(CLException&)
+cl_command_type CLEvent::commandType() const
 {
     return getInfoValue<cl_command_type>(CL_EVENT_COMMAND_TYPE);
 }
@@ -112,10 +118,10 @@ bool CLEvent::operator ==(const CLEvent &event) const
     return m_id == event.m_id;
 }
 
-void CLEvent::m_setId(cl_event ev_id) throw(CLException&)
+void CLEvent::m_setId(cl_event ev_id)
 {
     m_id = ev_id;
-    if(m_id != NULL){
+    if(m_id != nullptr){
         CL_ERR_THROW(clSetEventCallback(m_id, CL_COMPLETE,
                             CLEvent::event_notify, static_cast<void*>(this)));
     }
@@ -127,11 +133,11 @@ void CL_CALLBACK CLEvent::event_notify(cl_event /*event*/, cl_int exec_status, v
 }
 
 template<class T>
-T CLEvent::getInfoValue(cl_event_info info) const throw(CLException&)
+T CLEvent::getInfoValue(cl_event_info info) const
 {
     T res;
     CL_ERR_THROW(clGetEventInfo(m_id, info, sizeof(T),
-                        static_cast<void*>(&res), NULL));
+                        static_cast<void*>(&res), nullptr));
     return res;
 }
 

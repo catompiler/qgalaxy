@@ -28,8 +28,8 @@ public slots:
 private slots:
     void on_actExit_triggered();
     void on_actSettingsOCL_triggered();
-    void on_actSimNew_triggered();
-    void on_actSimEnd_triggered();
+    void on_actSimStart_triggered();
+    void on_actSimStop_triggered();
 
 private:
     void refreshUi();

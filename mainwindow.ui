@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>521</width>
-    <height>467</height>
+    <width>513</width>
+    <height>459</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,28 +25,28 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>521</width>
+     <width>513</width>
      <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="mnuFile">
     <property name="title">
-     <string>Файл</string>
+     <string>&amp;Файл</string>
     </property>
     <addaction name="actExit"/>
    </widget>
    <widget class="QMenu" name="mnuSettings">
     <property name="title">
-     <string>Настройки</string>
+     <string>&amp;Настройки</string>
     </property>
     <addaction name="actSettingsOCL"/>
    </widget>
    <widget class="QMenu" name="mnuSim">
     <property name="title">
-     <string>Симуляция</string>
+     <string>&amp;Симуляция</string>
     </property>
-    <addaction name="actSimNew"/>
-    <addaction name="actSimEnd"/>
+    <addaction name="actSimStart"/>
+    <addaction name="actSimStop"/>
    </widget>
    <addaction name="mnuFile"/>
    <addaction name="mnuSettings"/>
@@ -133,8 +133,8 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actSimNew"/>
-   <addaction name="actSimEnd"/>
+   <addaction name="actSimStart"/>
+   <addaction name="actSimStop"/>
   </widget>
   <action name="actExit">
    <property name="icon">
@@ -142,7 +142,7 @@
      <normaloff>:/images/exit.png</normaloff>:/images/exit.png</iconset>
    </property>
    <property name="text">
-    <string>Выход</string>
+    <string>В&amp;ыход</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
@@ -154,31 +154,34 @@
      <normaloff>:/images/opencl_icon.png</normaloff>:/images/opencl_icon.png</iconset>
    </property>
    <property name="text">
-    <string>Настройки OpenCL</string>
+    <string>&amp;Настройки OpenCL</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+L</string>
+    <string>Ctrl+S</string>
    </property>
   </action>
-  <action name="actSimNew">
+  <action name="actSimStart">
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/images/run.png</normaloff>:/images/run.png</iconset>
    </property>
    <property name="text">
-    <string>Новая</string>
+    <string>&amp;Запустить</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Shift+N</string>
+    <string>Ctrl+R</string>
    </property>
   </action>
-  <action name="actSimEnd">
+  <action name="actSimStop">
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/images/stop.png</normaloff>:/images/stop.png</iconset>
    </property>
    <property name="text">
-    <string>Завершить</string>
+    <string>&amp;Остановить</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
  </widget>

@@ -104,11 +104,11 @@ void MainWindow::on_actSettingsOCL_triggered()
     }
 }
 
-void MainWindow::on_actSimNew_triggered()
+void MainWindow::on_actSimStart_triggered()
 {
 }
 
-void MainWindow::on_actSimEnd_triggered()
+void MainWindow::on_actSimStop_triggered()
 {
 }
 

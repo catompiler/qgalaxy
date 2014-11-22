@@ -5,22 +5,57 @@
 #include <QMetaType>
 #include <QString>
 #include <QStringList>
+#include <QList>
 #include <QVector>
 #include "clexception.h"
 #include "utils.h"
 
-
+/**
+ * @class CLDevice.
+ * @brief Класс устройтва OpenCL.
+ */
 class CLDevice
 {
 public:
+    /**
+     * @brief Конструктор.
+     */
     CLDevice();
+
+    /**
+     * @brief Конструктор.
+     * @param device_id Идентификатор объекта устройства OpenCL.
+     */
     explicit CLDevice(const cl_device_id& device_id);
+
+    /**
+     * @brief Конструктор копирования.
+     * Создаёт копию объекта, но не устройства.
+     * @param device Копируемый объект.
+     */
     CLDevice(const CLDevice& device);
+
+    /**
+     * @brief Деструктор.
+     */
     ~CLDevice();
 
+    /**
+     * @brief Получение идентификатор объекта устройства OpenCL.
+     * @return Идентификатор объекта устройства OpenCL.
+     */
     cl_device_id id() const;
+
+    /**
+     * @brief Установка идентификатора объекта устройства OpenCL.
+     * @param dev_id Идентификатор объекта устройства OpenCL.
+     */
     void setId(const cl_device_id& dev_id);
 
+    /**
+     * @brief Получение флага валидности устройства OpenCL.
+     * @return Флаг валидности устройства OpenCL.
+     */
     bool isValid() const;
 
     cl_device_type type() const throw(CLException&);
@@ -84,22 +119,57 @@ public:
 
     bool hasExtension(const QString &ext_name) const throw(CLException&);
 
+    /**
+     * @brief Оператор присваивания.
+     * @param device Устройство OpenCL.
+     * @return Ссылка на себя.
+     */
     CLDevice& operator=(const CLDevice& device);
+
+    /**
+     * @brief Оператор сравнения.
+     * @param device Устройство OpenCL.
+     * @return true, если идентификаторы устройств равны, иначе false.
+     */
     bool operator==(const CLDevice& device) const;
 
 private:
+
+    /**
+     * @brief Идентификатор устройства OpenCL.
+     */
     cl_device_id m_id;
-    QString getInfoValueStr(cl_device_info info) const throw(CLException&);
 
-    template<class T>
-    T getInfoValue(cl_device_info info) const throw(CLException&);
+    /**
+     * @brief Получает текстовую информацию об устройстве OpenCL.
+     * @param info Вид информации.
+     * @return Текстовая информация об устройстве OpenCL.
+     * @throw CLException в случае ошибки.
+     */
+    QString getInfoValueStr(cl_device_info info) const;
 
+    /**
+     * @brief Получает информацию об устройстве OpenCL.
+     * @param info Вид информации.
+     * @return Информация об устройстве OpenCL.
+     * @throw CLException в случае ошибки.
+     */
     template<class T>
-    QVector<T> getInfoValuev(cl_device_info info) const throw(CLException&);
+    T getInfoValue(cl_device_info info) const;
+
+    /**
+     * @brief Получает информацию об устройстве OpenCL в виде вектора.
+     * @param info Вид информации.
+     * @return Информация об устройстве OpenCL в виде вектора.
+     * @throw CLException в случае ошибки.
+     */
+    template<class T>
+    QVector<T> getInfoValuev(cl_device_info info) const;
 };
 
 
 Q_DECLARE_METATYPE(CLDevice)
 
+typedef QList<CLDevice> CLDeviceList;
 
 #endif // CLDEVICE_H

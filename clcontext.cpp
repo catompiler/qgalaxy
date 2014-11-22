@@ -1,4 +1,6 @@
 #include "clcontext.h"
+#include "clexception.h"
+#include "utils.h"
 
 #ifdef Q_WS_WIN
 #include <windows.h>
@@ -12,7 +14,7 @@
 
 CLContext::CLContext()
 {
-    m_id = NULL;
+    m_id = nullptr;
 }
 
 CLContext::CLContext(const cl_context &context_id)
@@ -41,11 +43,11 @@ void CLContext::setId(const cl_context &cxt_id)
 
 bool CLContext::isValid() const
 {
-    return m_id != NULL;
+    return m_id != nullptr;
 }
 
 bool CLContext::create(const CLPlatform &platform, const CLDeviceList &devices,
-                       bool shared_with_gl, cl_int* err_code) throw(CLException&)
+                       bool shared_with_gl, cl_int* err_code)
 {
     static const char* gl_sharing_ext_name = "cl_khr_gl_sharing";
 
@@ -85,34 +87,34 @@ bool CLContext::create(const CLPlatform &platform, const CLDeviceList &devices,
 
     cl_int res = CL_SUCCESS;
 
-    m_id = clCreateContext(properties_vec.data(), devices_vec.size(), devices_vec.data(), NULL, NULL, &res);
+    m_id = clCreateContext(properties_vec.data(), devices_vec.size(), devices_vec.data(), nullptr, nullptr, &res);
     if(err_code) *err_code = res;
 
     CL_ERR_THROW(res);
 
-    return m_id != NULL;
+    return m_id != nullptr;
 }
 
-bool CLContext::retain() throw(CLException&)
+bool CLContext::retain()
 {
     CL_ERR_THROW(clRetainContext(m_id));
     return true;
 }
 
-bool CLContext::release() throw(CLException&)
+bool CLContext::release()
 {
     CL_ERR_THROW(clReleaseContext(m_id));
     return true;
 }
 
-size_t CLContext::devicesCount() const throw(CLException&)
+size_t CLContext::devicesCount() const
 {
     return getInfoValue<cl_uint>(CL_CONTEXT_NUM_DEVICES);
 }
 
-QList<CLDevice> CLContext::devices() const throw(CLException&)
+CLDeviceList CLContext::devices() const
 {
-    QList<CLDevice> res;
+    CLDeviceList res;
     QVector<cl_device_id> dev_ids = getInfoValuev<cl_device_id>(CL_CONTEXT_DEVICES);
     for(QVector<cl_device_id>::iterator it = dev_ids.begin(); it != dev_ids.end(); ++ it){
         res.push_back(CLDevice(*it));
@@ -131,7 +133,7 @@ bool CLContext::operator ==(const CLContext &cxt) const
     return m_id == cxt.m_id;
 }
 
-CLEvent CLContext::createEvent(cl_int *err_code) const throw(CLException&)
+CLEvent CLContext::createEvent(cl_int *err_code) const
 {
     CLEvent res_event;
     cl_int res = CL_SUCCESS;
@@ -144,7 +146,7 @@ CLEvent CLContext::createEvent(cl_int *err_code) const throw(CLException&)
     return res_event;
 }
 
-CLCommandQueue CLContext::createCommandQueue(const CLDevice &device, cl_int *err_code) const throw(CLException&)
+CLCommandQueue CLContext::createCommandQueue(const CLDevice &device, cl_int *err_code) const
 {
     CLCommandQueue res_queue;
     cl_int res = CL_SUCCESS;
@@ -157,7 +159,7 @@ CLCommandQueue CLContext::createCommandQueue(const CLDevice &device, cl_int *err
     return res_queue;
 }
 
-CLBuffer CLContext::createBuffer(cl_mem_flags flags, size_t size, void *host_ptr, cl_int *err_code) throw(CLException&)
+CLBuffer CLContext::createBuffer(cl_mem_flags flags, size_t size, void *host_ptr, cl_int *err_code) const
 {
     CLBuffer res_buffer;
     cl_int res = CL_SUCCESS;
@@ -171,20 +173,20 @@ CLBuffer CLContext::createBuffer(cl_mem_flags flags, size_t size, void *host_ptr
 }
 
 template<class T>
-T CLContext::getInfoValue(cl_device_info info) const throw(CLException&)
+T CLContext::getInfoValue(cl_device_info info) const
 {
     T res;
     CL_ERR_THROW(clGetContextInfo(m_id, info, sizeof(T),
-                        static_cast<void*>(&res), NULL));
+                        static_cast<void*>(&res), nullptr));
     return res;
 }
 
 template<class T>
-QVector<T> CLContext::getInfoValuev(cl_context_info info) const throw(CLException&)
+QVector<T> CLContext::getInfoValuev(cl_context_info info) const
 {
     size_t size = 0;
 
-    CL_ERR_THROW(clGetContextInfo(m_id, info, 0, NULL, &size));
+    CL_ERR_THROW(clGetContextInfo(m_id, info, 0, nullptr, &size));
 
     size_t vec_size = size / sizeof(T);
     if(vec_size == 0) vec_size = 1;
@@ -192,7 +194,7 @@ QVector<T> CLContext::getInfoValuev(cl_context_info info) const throw(CLExceptio
     QVector<T> res(vec_size);
 
     CL_ERR_THROW(clGetContextInfo(m_id, info, size,
-                        static_cast<void*>(res.data()), NULL));
+                        static_cast<void*>(res.data()), nullptr));
 
     return res;
 }

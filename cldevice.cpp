@@ -3,7 +3,7 @@
 
 CLDevice::CLDevice()
 {
-    m_id = NULL;
+    m_id = nullptr;
 }
 
 CLDevice::CLDevice(const cl_device_id &device_id)
@@ -32,7 +32,7 @@ void CLDevice::setId(const cl_device_id &dev_id)
 
 bool CLDevice::isValid() const
 {
-    return m_id != NULL;
+    return m_id != nullptr;
 }
 
 cl_device_type CLDevice::type() const throw(CLException&)
@@ -231,35 +231,35 @@ bool CLDevice::operator ==(const CLDevice &device) const
     return m_id == device.m_id;
 }
 
-QString CLDevice::getInfoValueStr(cl_device_info info_) const throw(CLException&)
+QString CLDevice::getInfoValueStr(cl_device_info info_) const
 {
     size_t len = 0;
 
-    CL_ERR_THROW(clGetDeviceInfo(m_id, info_, 0, NULL, &len));
+    CL_ERR_THROW(clGetDeviceInfo(m_id, info_, 0, nullptr, &len));
 
     char res_str[len];
 
     CL_ERR_THROW(clGetDeviceInfo(m_id, info_, len,
-                        static_cast<void*>(res_str), NULL));
+                        static_cast<void*>(res_str), nullptr));
 
     return QString(res_str);
 }
 
 template<class T>
-T CLDevice::getInfoValue(cl_device_info info) const throw(CLException&)
+T CLDevice::getInfoValue(cl_device_info info) const
 {
     T res;
     CL_ERR_THROW(clGetDeviceInfo(m_id, info, sizeof(T),
-                        static_cast<void*>(&res), NULL));
+                        static_cast<void*>(&res), nullptr));
     return res;
 }
 
 template<class T>
-QVector<T> CLDevice::getInfoValuev(cl_device_info info) const throw(CLException&)
+QVector<T> CLDevice::getInfoValuev(cl_device_info info) const
 {
     size_t size = 0;
 
-    CL_ERR_THROW(clGetDeviceInfo(m_id, info, 0, NULL, &size));
+    CL_ERR_THROW(clGetDeviceInfo(m_id, info, 0, nullptr, &size));
 
     size_t vec_size = size / sizeof(T);
     if(vec_size == 0) vec_size = 1;
@@ -267,7 +267,7 @@ QVector<T> CLDevice::getInfoValuev(cl_device_info info) const throw(CLException&
     QVector<T> res(vec_size);
 
     CL_ERR_THROW(clGetDeviceInfo(m_id, info, size,
-                        static_cast<void*>(res.data()), NULL));
+                        static_cast<void*>(res.data()), nullptr));
 
     return res;
 }

@@ -132,7 +132,7 @@ bool CLGLNBody::_initGLBuffers()
     unsigned int* ptr = static_cast<unsigned int*>(
                             _index_buf->map(QGLBuffer::WriteOnly)
                         );
-    if(ptr == NULL){
+    if(ptr == nullptr){
         _destroyGLBuffers();
         return false;
     }

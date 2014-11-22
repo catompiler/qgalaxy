@@ -1,10 +1,12 @@
 #include "clbuffer.h"
 #include "clcontext.h"
+#include "clexception.h"
+#include "utils.h"
 
 
 CLBuffer::CLBuffer()
 {
-    m_id = NULL;
+    m_id = nullptr;
 }
 
 CLBuffer::CLBuffer(const cl_mem &buf_id)
@@ -33,10 +35,10 @@ void CLBuffer::setId(const cl_mem &buf_id)
 
 bool CLBuffer::isValid() const
 {
-    return m_id != NULL;
+    return m_id != nullptr;
 }
 
-bool CLBuffer::create(const CLContext &cxt, cl_mem_flags flags, size_t size, void *host_ptr, cl_int *err_code) throw(CLException&)
+bool CLBuffer::create(const CLContext &cxt, cl_mem_flags flags, size_t size, void *host_ptr, cl_int *err_code)
 {
     cl_int res = CL_SUCCESS;
 
@@ -45,52 +47,52 @@ bool CLBuffer::create(const CLContext &cxt, cl_mem_flags flags, size_t size, voi
 
     CL_ERR_THROW(res);
 
-    return m_id != NULL;
+    return m_id != nullptr;
 }
 
-bool CLBuffer::retain() throw(CLException&)
+bool CLBuffer::retain()
 {
     CL_ERR_THROW(clRetainMemObject(m_id));
     return true;
 }
 
-bool CLBuffer::release() throw(CLException&)
+bool CLBuffer::release()
 {
     CL_ERR_THROW(clReleaseMemObject(m_id));
     return true;
 }
 
-cl_mem_flags CLBuffer::flags() const throw(CLException&)
+cl_mem_flags CLBuffer::flags() const
 {
     return getInfoValue<cl_mem_flags>(CL_MEM_FLAGS);
 }
 
-size_t CLBuffer::size() const throw(CLException&)
+size_t CLBuffer::size() const
 {
     return getInfoValue<size_t>(CL_MEM_SIZE);
 }
 
-void *CLBuffer::hostPtr() const throw(CLException&)
+void *CLBuffer::hostPtr() const
 {
     return getInfoValue<void*>(CL_MEM_HOST_PTR);
 }
 
-cl_context CLBuffer::contextId() const throw(CLException&)
+cl_context CLBuffer::contextId() const
 {
     return getInfoValue<cl_context>(CL_MEM_CONTEXT);
 }
 
 bool CLBuffer::enqueueRead(const CLCommandQueue &queue, bool blocking,
                            size_t offset, size_t cb, void *ptr,
-                           const CLEventList *wait_events, CLEvent *event) throw(CLException&)
+                           const CLEventList *wait_events, CLEvent *event)
 {
     cl_bool clblocking = CL_FALSE;
 
     QVector<cl_event> wait_events_vec;
-    const cl_event* wait_events_ptr = NULL;
+    const cl_event* wait_events_ptr = nullptr;
 
-    cl_event event_id = NULL;
-    cl_event* event_id_ptr = NULL;
+    cl_event event_id = nullptr;
+    cl_event* event_id_ptr = nullptr;
 
     if(blocking) clblocking = CL_TRUE;
 
@@ -114,15 +116,15 @@ bool CLBuffer::enqueueRead(const CLCommandQueue &queue, bool blocking,
 
 bool CLBuffer::enqueueWrite(const CLCommandQueue &queue, bool blocking,
                             size_t offset, size_t cb, void *ptr,
-                            const CLEventList *wait_events, CLEvent *event) throw(CLException&)
+                            const CLEventList *wait_events, CLEvent *event)
 {
     cl_bool clblocking = CL_FALSE;
 
     QVector<cl_event> wait_events_vec;
-    const cl_event* wait_events_ptr = NULL;
+    const cl_event* wait_events_ptr = nullptr;
 
-    cl_event event_id = NULL;
-    cl_event* event_id_ptr = NULL;
+    cl_event event_id = nullptr;
+    cl_event* event_id_ptr = nullptr;
 
     if(blocking) clblocking = CL_TRUE;
 
@@ -147,15 +149,15 @@ bool CLBuffer::enqueueWrite(const CLCommandQueue &queue, bool blocking,
 void* CLBuffer::enqueueMap(const CLCommandQueue &queue, bool blocking,
                           cl_map_flags flags, size_t offset, size_t cb,
                           const CLEventList *wait_events, CLEvent *event,
-                          cl_int *err_code) throw(CLException&)
+                          cl_int *err_code)
 {
     cl_bool clblocking = CL_FALSE;
 
     QVector<cl_event> wait_events_vec;
-    const cl_event* wait_events_ptr = NULL;
+    const cl_event* wait_events_ptr = nullptr;
 
-    cl_event event_id = NULL;
-    cl_event* event_id_ptr = NULL;
+    cl_event event_id = nullptr;
+    cl_event* event_id_ptr = nullptr;
 
     if(blocking) clblocking = CL_TRUE;
 
@@ -183,13 +185,13 @@ void* CLBuffer::enqueueMap(const CLCommandQueue &queue, bool blocking,
     return res_ptr;
 }
 
-bool CLBuffer::enqueueUnMap(const CLCommandQueue &queue, void *ptr, const CLEventList *wait_events, CLEvent *event) throw(CLException&)
+bool CLBuffer::enqueueUnMap(const CLCommandQueue &queue, void *ptr, const CLEventList *wait_events, CLEvent *event)
 {
     QVector<cl_event> wait_events_vec;
-    const cl_event* wait_events_ptr = NULL;
+    const cl_event* wait_events_ptr = nullptr;
 
-    cl_event event_id = NULL;
-    cl_event* event_id_ptr = NULL;
+    cl_event event_id = nullptr;
+    cl_event* event_id_ptr = nullptr;
 
     if(wait_events){
         for(CLEventList::const_iterator it = wait_events->begin(); it != wait_events->end(); ++ it){
@@ -221,10 +223,10 @@ bool CLBuffer::operator ==(const CLBuffer &buffer) const
 }
 
 template<class T>
-T CLBuffer::getInfoValue(cl_mem_info info) const throw(CLException&)
+T CLBuffer::getInfoValue(cl_mem_info info) const
 {
     T res;
     CL_ERR_THROW(clGetMemObjectInfo(m_id, info, sizeof(T),
-                      static_cast<void*>(&res), NULL));
+                      static_cast<void*>(&res), nullptr));
     return res;
 }
