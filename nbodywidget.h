@@ -3,6 +3,10 @@
 
 #include <QGLWidget>
 
+class NBody;
+
+
+
 class NBodyWidget : public QGLWidget
 {
     Q_OBJECT
@@ -17,6 +21,9 @@ protected:
     void initializeGL();
     void resizeGL(int width, int height);
     void paintGL();
+
+private:
+    NBody* nbody;
 };
 
 #endif // NBODYWIDGET_H

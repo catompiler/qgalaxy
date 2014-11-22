@@ -29,8 +29,7 @@ SOURCES += main.cpp\
     clexception.cpp \
     clprogram.cpp \
     clkernel.cpp \
-    nbodywidget.cpp \
-    nbody.cpp
+    nbodywidget.cpp
 
 HEADERS  += mainwindow.h \
     log.h \
@@ -48,8 +47,7 @@ HEADERS  += mainwindow.h \
     utils.h \
     clprogram.h \
     clkernel.h \
-    nbodywidget.h \
-    nbody.h
+    nbodywidget.h
 
 FORMS    += mainwindow.ui \
     oclsettingsdialog.ui

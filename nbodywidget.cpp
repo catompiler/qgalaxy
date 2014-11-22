@@ -1,5 +1,6 @@
 #include "nbodywidget.h"
 #include "log.h"
+#include "nbody.h"
 #include <QGLFormat>
 
 #define LOG_WHO "NBody View"
@@ -35,10 +36,13 @@ NBodyWidget::NBodyWidget(QWidget *parent) :
     glformat.setVersion(2, 1);
 
     setFormat(glformat);
+
+    nbody = new NBody(this);
 }
 
 NBodyWidget::~NBodyWidget()
 {
+    delete nbody;
 }
 
 void NBodyWidget::initializeGL()
