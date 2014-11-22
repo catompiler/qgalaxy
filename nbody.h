@@ -8,12 +8,12 @@
 class CLContext;
 
 
-class CLGLNBody : public QObject
+class NBody : public QObject
 {
     Q_OBJECT
 public:
-    explicit CLGLNBody(CLContext* clcxt_, QObject *parent = 0);
-    ~CLGLNBody();
+    explicit NBody(QObject *parent = 0);
+    ~NBody();
 
     size_t bodiesCount() const;
 

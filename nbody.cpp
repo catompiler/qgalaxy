@@ -1,43 +1,43 @@
-#include "clglnbody.h"
+#include "nbody.h"
 #include <QGLBuffer>
 #include "clcontext.h"
 
 
 
-CLGLNBody::CLGLNBody(CLContext* clcxt_, QObject *parent) :
+NBody::NBody(QObject *parent) :
     QObject(parent)
 {
-    _clcxt = clcxt_;
+    _clcxt = new CLContext();
+
     _bodies_count = 0;
+
     _mass_buf = new QGLBuffer(QGLBuffer::VertexBuffer);
     _pos_buf = new QGLBuffer(QGLBuffer::VertexBuffer);
     _vel_buf = new QGLBuffer(QGLBuffer::VertexBuffer);
     _index_buf = new QGLBuffer(QGLBuffer::IndexBuffer);
 }
 
-CLGLNBody::~CLGLNBody()
+NBody::~NBody()
 {
-    if(_clcxt){
-        _clcxt->release();
-        delete _clcxt;
-    }
+    delete _clcxt;
+
     delete _mass_buf;
     delete _pos_buf;
     delete _vel_buf;
     delete _index_buf;
 }
 
-size_t CLGLNBody::bodiesCount() const
+size_t NBody::bodiesCount() const
 {
     return _bodies_count;
 }
 
-CLContext *CLGLNBody::clcontext()
+CLContext *NBody::clcontext()
 {
     return _clcxt;
 }
 
-bool CLGLNBody::create(size_t bodies_count_)
+bool NBody::create(size_t bodies_count_)
 {
     destroy();
 
@@ -48,7 +48,7 @@ bool CLGLNBody::create(size_t bodies_count_)
     return true;
 }
 
-bool CLGLNBody::destroy()
+bool NBody::destroy()
 {
     bool res;
 
@@ -57,7 +57,7 @@ bool CLGLNBody::destroy()
     return res;
 }
 
-bool CLGLNBody::setMasses(const float *src_, size_t count_, size_t offset_)
+bool NBody::setMasses(const float *src_, size_t count_, size_t offset_)
 {
     if(!_mass_buf->isCreated()) return false;
     if(!_mass_buf->bind()) return false;
@@ -66,7 +66,7 @@ bool CLGLNBody::setMasses(const float *src_, size_t count_, size_t offset_)
     return true;
 }
 
-bool CLGLNBody::setPositions(const float *src_, size_t count_, size_t offset_)
+bool NBody::setPositions(const float *src_, size_t count_, size_t offset_)
 {
     if(!_pos_buf->isCreated()) return false;
     if(!_pos_buf->bind()) return false;
@@ -75,7 +75,7 @@ bool CLGLNBody::setPositions(const float *src_, size_t count_, size_t offset_)
     return true;
 }
 
-bool CLGLNBody::setVelocities(const float *src_, size_t count_, size_t offset_)
+bool NBody::setVelocities(const float *src_, size_t count_, size_t offset_)
 {
     if(!_vel_buf->isCreated()) return false;
     if(!_vel_buf->bind()) return false;
@@ -84,27 +84,27 @@ bool CLGLNBody::setVelocities(const float *src_, size_t count_, size_t offset_)
     return true;
 }
 
-QGLBuffer *CLGLNBody::massBuffer()
+QGLBuffer *NBody::massBuffer()
 {
     return _mass_buf;
 }
 
-QGLBuffer *CLGLNBody::posBuffer()
+QGLBuffer *NBody::posBuffer()
 {
     return _pos_buf;
 }
 
-QGLBuffer *CLGLNBody::velBuffer()
+QGLBuffer *NBody::velBuffer()
 {
     return _vel_buf;
 }
 
-QGLBuffer *CLGLNBody::indexBuffer()
+QGLBuffer *NBody::indexBuffer()
 {
     return _index_buf;
 }
 
-bool CLGLNBody::_initGLBuffer(QGLBuffer *buf_,
+bool NBody::_initGLBuffer(QGLBuffer *buf_,
                               QGLBuffer::UsagePattern usage_,
                               size_t item_size_)
 {
@@ -115,7 +115,7 @@ bool CLGLNBody::_initGLBuffer(QGLBuffer *buf_,
     return true;
 }
 
-bool CLGLNBody::_initGLBuffers()
+bool NBody::_initGLBuffers()
 {
     bool res;
 
@@ -148,7 +148,7 @@ bool CLGLNBody::_initGLBuffers()
     return true;
 }
 
-bool CLGLNBody::_destroyGLBuffer(QGLBuffer *buf_)
+bool NBody::_destroyGLBuffer(QGLBuffer *buf_)
 {
     if(buf_ && buf_->isCreated()){
         buf_->destroy();
@@ -157,7 +157,7 @@ bool CLGLNBody::_destroyGLBuffer(QGLBuffer *buf_)
     return false;
 }
 
-bool CLGLNBody::_destroyGLBuffers()
+bool NBody::_destroyGLBuffers()
 {
     _destroyGLBuffer(_mass_buf);
     _destroyGLBuffer(_pos_buf);
