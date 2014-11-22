@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     clbuffer.cpp \
     oclsettingsdialog.cpp \
     vendor.cpp \
-    clexception.cpp
+    clexception.cpp \
+    clprogram.cpp
 
 HEADERS  += mainwindow.h \
     galaxyviewwidget.h \
@@ -43,7 +44,8 @@ HEADERS  += mainwindow.h \
     oclsettingsdialog.h \
     vendor.h \
     clexception.h \
-    utils.h
+    utils.h \
+    clprogram.h
 
 FORMS    += mainwindow.ui \
     oclsettingsdialog.ui

@@ -231,15 +231,15 @@ bool CLDevice::operator ==(const CLDevice &device) const
     return m_id == device.m_id;
 }
 
-QString CLDevice::getInfoValueStr(cl_device_info info_) const
+QString CLDevice::getInfoValueStr(cl_device_info info) const
 {
     size_t len = 0;
 
-    CL_ERR_THROW(clGetDeviceInfo(m_id, info_, 0, nullptr, &len));
+    CL_ERR_THROW(clGetDeviceInfo(m_id, info, 0, nullptr, &len));
 
     char res_str[len];
 
-    CL_ERR_THROW(clGetDeviceInfo(m_id, info_, len,
+    CL_ERR_THROW(clGetDeviceInfo(m_id, info, len,
                         static_cast<void*>(res_str), nullptr));
 
     return QString(res_str);
