@@ -98,13 +98,14 @@ void MainWindow::on_actSettingsOCL_triggered()
 
             Settings::get().setClPlatformName(oclSettingsDlg->currentPlatform().name());
             Settings::get().setClDeviceName(oclSettingsDlg->currentDevice().name());
+            Settings::get().setBodiesCount(oclSettingsDlg->bodiesCount());
+
+            nbodyWidget->recreateNBody();
 
         }catch(CLException& e){
             log(Log::ERROR, LOG_WHO, e.what());
             QMessageBox::critical(this, tr("Ошибка!"), e.what());
         }
-
-        Settings::get().setBodiesCount(oclSettingsDlg->bodiesCount());
     }
 }
 
@@ -119,32 +120,3 @@ void MainWindow::on_actSimStop_triggered()
 void MainWindow::refreshUi()
 {
 }
-
-
-
-/*QGLFormat MainWindow::_getGLFormat()
-{
-    QGLFormat res_glfmt;
-
-    res_glfmt.setRgba(true);
-    res_glfmt.setRedBufferSize(8);
-    res_glfmt.setGreenBufferSize(8);
-    res_glfmt.setBlueBufferSize(8);
-    res_glfmt.setAlpha(true);
-    res_glfmt.setAlphaBufferSize(8);
-
-    res_glfmt.setDepth(true);
-    res_glfmt.setDepthBufferSize(24);
-
-    res_glfmt.setStencil(false);
-    res_glfmt.setAccum(false);
-    res_glfmt.setStereo(false);
-
-    res_glfmt.setSampleBuffers(true);
-    res_glfmt.setSamples(4);
-    res_glfmt.setProfile(QGLFormat::CoreProfile);
-    res_glfmt.setVersion(3, 3);
-
-    return res_glfmt;
-}*/
-

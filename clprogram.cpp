@@ -4,7 +4,7 @@
 #include "clexception.h"
 #include "utils.h"
 #include <QString>
-
+#include <QByteArray>
 
 
 CLProgram::CLProgram()
@@ -45,10 +45,10 @@ bool CLProgram::create(const CLContext &clcxt, const QString &source, cl_int* er
 {
     cl_int res = CL_SUCCESS;
 
-    const char* c_source = source.toUtf8().data();
-    size_t source_size = source.length();
+    QByteArray source_utf = source.toUtf8();
+    const char* c_source = source_utf.data();
 
-    m_id = clCreateProgramWithSource(clcxt.id(), 1, &c_source, &source_size, &res);
+    m_id = clCreateProgramWithSource(clcxt.id(), 1, &c_source, nullptr, &res);
 
     if(err_code) *err_code = res;
     CL_ERR_THROW(res);
@@ -78,7 +78,8 @@ bool CLProgram::build(const CLDeviceList &devices, const QStringList &options, c
         devices_vec.push_back((*it).id());
     }
 
-    const char* options_cstr = options.join(" ").toUtf8().data();
+    QByteArray options_utf = options.join(" ").toUtf8();
+    const char* options_cstr = options_utf.data();
 
     cl_int res = clBuildProgram(m_id, devices_vec.size(), devices_vec.data(), options_cstr, nullptr, nullptr);
 
@@ -133,6 +134,11 @@ CLProgram &CLProgram::operator =(const CLProgram &prog)
 bool CLProgram::operator ==(const CLProgram &prog) const
 {
     return m_id == prog.m_id;
+}
+
+void CLProgram::unloadCompiler()
+{
+    clUnloadCompiler();
 }
 
 QString CLProgram::getInfoValueStr(cl_program_info info) const

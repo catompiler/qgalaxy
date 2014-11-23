@@ -1,6 +1,9 @@
 #include "nbodywidget.h"
 #include "log.h"
 #include "nbody.h"
+#include "clplatform.h"
+#include "cldevice.h"
+#include "settings.h"
 #include <QGLFormat>
 
 #define LOG_WHO "NBody View"
@@ -42,12 +45,45 @@ NBodyWidget::NBodyWidget(QWidget *parent) :
 
 NBodyWidget::~NBodyWidget()
 {
+    makeCurrent();
+    nbody->destroy();
+    doneCurrent();
+
     delete nbody;
+}
+
+bool NBodyWidget::recreateNBody()
+{
+    bool res = true;
+
+    bool has_glcontext = QGLContext::currentContext() != nullptr;
+
+    if(!has_glcontext) makeCurrent();
+
+    try{
+        CLPlatform platform = CLPlatform::byName(Settings::get().clPlatformName());
+        CLDevice device = platform.deviceByName(Settings::get().clDeviceName());
+
+        nbody->destroy();
+        if(!nbody->create(platform, device, Settings::get().bodiesCount())){
+            log(Log::ERROR, LOG_WHO, tr("Error initializing NBody system"));
+            res = false;
+        }
+    }catch(CLException& e){
+        log(Log::ERROR, LOG_WHO, e.what());
+        res = false;
+    }
+
+    if(!has_glcontext) doneCurrent();
+
+    return res;
 }
 
 void NBodyWidget::initializeGL()
 {
     log(Log::INFO, LOG_WHO, tr("Initializing OpenGL"));
+
+    recreateNBody();
 }
 
 void NBodyWidget::resizeGL(int width, int height)

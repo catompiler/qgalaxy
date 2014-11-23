@@ -16,6 +16,7 @@ public:
 signals:
 
 public slots:
+    bool recreateNBody();
 
 protected:
     void initializeGL();

@@ -2,56 +2,311 @@
 #define CLGLNBODY_H
 
 #include <QObject>
+#include <QVector>
+#include <QVector3D>
 #include <QGLBuffer>
+#include <CL/opencl.h>
 
 
+class CLPlatform;
+class CLDevice;
 class CLContext;
+class CLBuffer;
+class CLCommandQueue;
+class CLProgram;
+class CLKernel;
+class CLEvent;
 
-
+/**
+ * @class NBody.
+ * @brief Ксласс симуляции гравитационного взаимодействия.
+ */
 class NBody : public QObject
 {
     Q_OBJECT
 public:
+    /**
+     * @brief Конструктор.
+     * @param parent Объект-родитель.
+     */
     explicit NBody(QObject *parent = 0);
+
+    /**
+     * @brief Деструкторю.
+     */
     ~NBody();
 
     size_t bodiesCount() const;
 
     CLContext* clcontext();
 
-    bool create(size_t bodies_count_);
+    bool create(const CLPlatform &platform, const CLDevice &device, size_t bodies);
     bool destroy();
 
-    bool setMasses(const float* src_, size_t count_, size_t offset_);
-    bool setPositions(const float* src_, size_t count_, size_t offset_);
-    bool setVelocities(const float* src_, size_t count_, size_t offset_);
+    /**
+     * @brief Установка значений масс объектов.
+     * @param data Значения масс.
+     * @param offset Смещение.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setMasses(const QVector<qreal>& data, size_t offset = 0);
 
-    QGLBuffer* massBuffer();
-    QGLBuffer* posBuffer();
-    QGLBuffer* velBuffer();
+    /**
+     * @brief Установка значений позиций объектов.
+     * @param data Значения позиций.
+     * @param offset Смещение.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setPositions(const QVector<QVector3D>& data, size_t offset = 0);
+
+    /**
+     * @brief Установка значений скоростей объектов.
+     * @param data Значения скоростей.
+     * @param offset Смещение.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setVelocities(const QVector<QVector3D>& data, size_t offset = 0);
+
+    /**
+     * @brief Получение индексного буфера.
+     * @return Индексный буфер.
+     */
     QGLBuffer* indexBuffer();
 
+    /**
+     * @brief Получение буфера масс.
+     * @return Буфер масс.
+     */
+    QGLBuffer* massBuffer();
+
+    /**
+     * @brief Получение буфера позиций.
+     * @return Буфер позиций.
+     */
+    QGLBuffer* posBuffer();
+
+    /**
+     * @brief Получение буфера скоростей.
+     * @return Буфер скоростей.
+     */
+    QGLBuffer* velBuffer();
+
 signals:
+    /**
+     * @brief Сигнал окончания симуляции.
+     */
     void simulationFinished();
-    
+
 public slots:
 
 private:
-    size_t _bodies_count;
+    /**
+     * @brief Число объектов.
+     */
+    size_t bodies_count;
 
-    QGLBuffer* _mass_buf;
-    QGLBuffer* _pos_buf;
-    QGLBuffer* _vel_buf;
-    QGLBuffer* _index_buf;
+    /**
+     * @brief Флаг готовности.
+     */
+    bool is_ready;
 
-    CLContext* _clcxt;
+    /**
+     * @brief Текущие буферы для чтения.
+     */
+    size_t current_in;
 
-    bool _initGLBuffer(QGLBuffer* buf_,
-                       QGLBuffer::UsagePattern usage_,
-                       size_t item_size_);
-    bool _initGLBuffers();
-    bool _destroyGLBuffer(QGLBuffer* buf_);
-    bool _destroyGLBuffers();
+    /**
+     * @brief Текущие буферы для записи.
+     */
+    size_t current_out;
+
+    /**
+     * @brief Число буферов для переключения чтения/записи.
+     */
+    static const size_t switch_buffers_count = 2;
+
+    /**
+     * @brief Индексный буфер OpenGL.
+     */
+    QGLBuffer* gl_index_buf;
+
+    /**
+     * @brief Буфер масс OpenGL.
+     */
+    QGLBuffer* gl_mass_buf;
+
+    /**
+     * @brief Буферы позиций OpenGL.
+     */
+    QGLBuffer* gl_pos_buf[switch_buffers_count];
+
+    /**
+     * @brief Буферы скоростей OpenGL.
+     */
+    QGLBuffer* gl_vel_buf[switch_buffers_count];
+
+    /**
+     * @brief Контекст OpenCL.
+     */
+    CLContext* clcxt;
+
+    /**
+     * @brief Очередь команд OpenCL.
+     */
+    CLCommandQueue* clqueue;
+
+    /**
+     * @brief Программа OpenCL.
+     */
+    CLProgram* clprogram;
+
+    /**
+     * @brief Ядро OpenCL.
+     */
+    CLKernel* clkernel;
+
+    /**
+     * @brief Событие OpenCL.
+     */
+    CLEvent* clevent;
+
+    /**
+     * @brief Буфер масс OpenCL.
+     */
+    CLBuffer* cl_mass_buf;
+
+    /**
+     * @brief Буферы позиций OpenCL.
+     */
+    CLBuffer* cl_pos_buf[switch_buffers_count];
+
+    /**
+     * @brief Буферы скоростей OpenCL.
+     */
+    CLBuffer* cl_vel_buf[switch_buffers_count];
+
+    /**
+     * @brief Глобальный размер измерений X,Y.
+     */
+    size_t global_dims[2];
+
+    /**
+     * @brief Локальный размер измерений X,Y.
+     */
+    size_t local_dims[2];
+
+    /**
+     * @brief Инициализирует OpenCL.
+     * @param platform Платформа OpenCL.
+     * @param device Устройство OpenCL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool initOpenCL(const CLPlatform& platform, const CLDevice& device);
+
+    /**
+     * @brief Завершает OpenCL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool termOpenCL();
+
+    /**
+     * @brief Вычисляет размеры измерений X,Y.
+     * @return true в случае успеха, иначе false.
+     */
+    bool calculateDimsSizes();
+
+    /**
+     * @brief Уничтожает объект OpenCL.
+     * @param clobj Объект OpenCL.
+     * @return true в случае успеха, иначе false.
+     */
+    template <typename T>
+    bool destroyCLObject(T* clobj);
+
+    /**
+     * @brief Создаёт, считывает и компилирует программу OpenCL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool createCLProgram();
+
+    /**
+     * @brief Переключение буферов для чтения/записи.
+     */
+    void switchCurrentBuffers();
+
+    /**
+     * @brief Создаёт буферы OpenGL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool createGLBuffers();
+
+    /**
+     * @brief Уничтожает буферы OpenGL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool destroyGLBuffers();
+
+    /**
+     * @brief Создаёт буфер OpenGL.
+     * @param buf Буфер OpenGL.
+     * @param usage Тип использования буфера.
+     * @param item_size_bytes Размер элемента буфера в байтах.
+     * @return true в случае успеха, иначе false.
+     */
+    bool createGLBuffer(QGLBuffer* buf, QGLBuffer::UsagePattern usage, size_t item_size_bytes);
+
+    /**
+     * @brief Уничтожает буфер OpenGL.
+     * @param buf Буфер OpenGL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool destroyGLBuffer(QGLBuffer* buf);
+
+    /**
+     * @brief Запись в буфер данных.
+     * @param buf Буфер.
+     * @param data Данные.
+     * @param offset Смещение в буфере, в элементах вектора.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setGLBufferData(QGLBuffer* buf, const QVector<QVector3D>& data, size_t offset = 0);
+
+    /**
+     * @brief Запись в буфер данных.
+     * @param buf Буфер.
+     * @param data Данные.
+     * @param offset Смещение в буфере, в элементах вектора.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setGLBufferData(QGLBuffer* buf, const QVector<qreal>& data, size_t offset = 0);
+
+    /**
+     * @brief Создаёт буферы OpenCL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool createCLBuffers();
+
+    /**
+     * @brief Уничтожает буферы OpenCL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool destroyCLBuffers();
+
+    /**
+     * @brief Создаёт буфер OpenCL.
+     * @param clbuf Буфер OpenCL.
+     * @param flags Флаги буфера OpenCL.
+     * @param glbuf Буфер OpenGL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool createCLBuffer(CLBuffer* clbuf, cl_mem_flags flags, QGLBuffer* glbuf);
+
+    /**
+     * @brief Уничтожает буфер OpenCL.
+     * @param buf Буфер OpenCL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool destroyCLBuffer(CLBuffer* buf);
 };
 
 #endif // CLGLNBODY_H

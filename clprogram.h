@@ -149,6 +149,11 @@ public:
      */
     bool operator==(const CLProgram& prog) const;
 
+    /**
+     * @brief Выгружает компилятор OpenCL C.
+     */
+    static void unloadCompiler();
+
 private:
 
     /**
