@@ -5,6 +5,7 @@
 
 class CLContext;
 class CLDevice;
+class CLEvent;
 
 /**
  * @class CLCommandQueue.
@@ -92,6 +93,21 @@ public:
      * @throw CLException в случае ошибки.
      */
     bool finish();
+
+    /**
+     * @brief Добавляет маркер в очередь.
+     * @param event Событие OpenCL.
+     * @return true в случае успеха, иначе false.
+     * @throw CLException в случае ошибки.
+     */
+    bool marker(CLEvent* event);
+
+    /**
+     * @brief Добавляет барьер в очередь.
+     * @return true в случае успеха, иначе false.
+     * @throw CLException в случае ошибки.
+     */
+    bool barrier();
 
     /**
      * @brief Получение идентификатора контекста OpenCL.

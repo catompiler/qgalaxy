@@ -102,6 +102,20 @@ public:
     bool setStatus(cl_int status);
 
     /**
+     * @brief Получение флага успешного завершения задания события.
+     * @return Флаг успешного завершения задания события.
+     * @throw CLException в случае ошибки.
+     */
+    bool isCompleted() const;
+
+    /**
+     * @brief Получение флага выполнения задания события.
+     * @return Флаг выполнения задания события.
+     * @throw CLException в случае ошибки.
+     */
+    bool isRunning() const;
+
+    /**
      * @brief Ожидание события OpenCL.
      * @return true в случае успеха, иначе false.
      * @throw CLException в случае ошибки.
@@ -155,7 +169,7 @@ signals:
      * @brief Сигнал события OpenCL.
      * @param exec_status Статус выполнения операции.
      */
-    void completed(cl_int exec_status);
+    void completed(int exec_status);
 private:
 
     /**

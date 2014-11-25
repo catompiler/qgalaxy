@@ -7,6 +7,7 @@
 class QString;
 class NBodyWidget;
 class OCLSettingsDialog;
+class QFile;
 
 namespace Ui {
 class MainWindow;
@@ -23,16 +24,19 @@ public:
     bool postInit();
 
 public slots:
-    void addlog(Log::MsgType type_, const QString& who_, const QString& msg_);
+    void addlog(Log::MsgType msg_type, const QString& who, const QString& msg);
 
 private slots:
     void on_actExit_triggered();
     void on_actSettingsOCL_triggered();
     void on_actSimStart_triggered();
     void on_actSimStop_triggered();
+    void on_actGenSGalaxy_triggered();
 
 private:
     void refreshUi();
+
+    QFile* logFile;
 
     Ui::MainWindow *ui;
 

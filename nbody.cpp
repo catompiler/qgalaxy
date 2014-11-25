@@ -66,6 +66,8 @@ NBody::NBody(QObject *parent) :
     clprogram = new CLProgram();
     clkernel = new CLKernel();
     clevent = new CLEvent();
+
+    connect(clevent, SIGNAL(completed(int)), this, SIGNAL(simulationFinished()));
 }
 
 NBody::~NBody()
@@ -121,7 +123,11 @@ bool NBody::destroy()
 {
     if(!is_ready) return false;
 
-    clqueue->finish();
+    try{
+        clqueue->finish();
+    }catch(CLException& e){
+        log(Log::WARNING, LOG_WHO, e.what());
+    }
     is_ready = false;
 
     termOpenCL();
@@ -130,7 +136,30 @@ bool NBody::destroy()
     return true;
 }
 
+bool NBody::isReady() const
+{
+    return is_ready;
+}
+
+bool NBody::isRunning() const
+{
+    if(!clevent->isValid()) return false;
+
+    bool res = false;
+    try{
+        res = clevent->isRunning();
+    }catch(CLException& e){
+        log(Log::WARNING, LOG_WHO, e.what());
+    }
+    return res;
+}
+
 bool NBody::setMasses(const QVector<qreal> &data, size_t offset)
+{
+    return setGLBufferData(gl_mass_buf, data, offset);
+}
+
+bool NBody::setMasses(const QVector<float> &data, size_t offset)
 {
     return setGLBufferData(gl_mass_buf, data, offset);
 }
@@ -140,7 +169,17 @@ bool NBody::setPositions(const QVector<QVector3D> &data, size_t offset)
     return setGLBufferData(gl_pos_buf[current_in], data, offset);
 }
 
+bool NBody::setPositions(const QVector<Point3f> &data, size_t offset)
+{
+    return setGLBufferData(gl_pos_buf[current_in], data, offset);
+}
+
 bool NBody::setVelocities(const QVector<QVector3D> &data, size_t offset)
+{
+    return setGLBufferData(gl_vel_buf[current_in], data, offset);
+}
+
+bool NBody::setVelocities(const QVector<Point3f> &data, size_t offset)
 {
     return setGLBufferData(gl_vel_buf[current_in], data, offset);
 }
@@ -163,6 +202,70 @@ QGLBuffer *NBody::posBuffer()
 QGLBuffer *NBody::velBuffer()
 {
     return gl_vel_buf[current_in];
+}
+
+bool NBody::simulate(float dt)
+{
+    if(!is_ready) return false;
+
+    bool res = true;
+
+    glFinish();
+
+    if(clevent->isValid()){
+        try{ clevent->release(); }catch(CLException& e){ log(Log::WARNING, LOG_WHO, e.what()); }
+    }
+
+    try{
+        cl_mass_buf->enqueueAcquireGLObject(*clqueue);
+        for(size_t i = 0; i < switch_buffers_count; i ++){
+            cl_pos_buf[i]->enqueueAcquireGLObject(*clqueue);
+            cl_vel_buf[i]->enqueueAcquireGLObject(*clqueue);
+        }
+
+        clkernel->setArg<float>(KERNEL_MAIN_ARG_DT, dt);
+        clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_POSITIONS_IN,  cl_pos_buf[current_in ]->id());
+        clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_POSITIONS_OUT, cl_pos_buf[current_out]->id());
+        clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_VELOCITIES_IN,  cl_vel_buf[current_in ]->id());
+        clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_VELOCITIES_OUT, cl_vel_buf[current_out]->id());
+
+        clkernel->execute(*clqueue, 2, global_dims, local_dims);
+
+    }catch(CLException& e){
+        log(Log::ERROR, LOG_WHO, e.what());
+        res = false;
+    }
+
+    try{cl_mass_buf->enqueueReleaseGLObject(*clqueue); }catch(CLException& e){ log(Log::WARNING, LOG_WHO, e.what()); }
+    for(size_t i = 0; i < switch_buffers_count; i ++){
+        try{ cl_pos_buf[i]->enqueueReleaseGLObject(*clqueue); }catch(CLException& e){ log(Log::WARNING, LOG_WHO, e.what()); }
+        try{ cl_vel_buf[i]->enqueueReleaseGLObject(*clqueue); }catch(CLException& e){ log(Log::WARNING, LOG_WHO, e.what()); }
+    }
+
+    if(res){
+
+        switchCurrentBuffers();
+
+        bool add_marker_res = false;
+        try{
+            add_marker_res = clqueue->marker(clevent);
+            clqueue->flush();
+        }catch(CLException& e){
+            log(Log::WARNING, LOG_WHO, e.what());
+        }
+
+        if(!add_marker_res){
+            log(Log::WARNING, LOG_WHO, tr("Error enqueueing marker, waiting"));
+            try{
+                res = clqueue->finish();
+            }catch(CLException& e){
+                log(Log::WARNING, LOG_WHO, e.what());
+            }
+            emit simulationFinished();
+        }
+    }
+
+    return res;
 }
 
 bool NBody::initOpenCL(const CLPlatform &platform, const CLDevice &device)
@@ -293,7 +396,7 @@ bool NBody::createCLProgram()
     }
 
     try{
-        clprogram->build(clcxt->devices(), QStringList() << "-cl-mad-enable" << "-cl-fast-relaxed-math");
+        clprogram->build(clcxt->devices(), QStringList());// << "-cl-mad-enable" << "-cl-fast-relaxed-math");
     }catch(CLException& e){
         log(Log::ERROR, LOG_WHO, e.what());
 
@@ -360,7 +463,10 @@ bool NBody::createGLBuffers()
         }
     }
 
-    gl_index_buf->bind();
+    if(!gl_index_buf->bind()){
+        destroyGLBuffers();
+        return false;
+    }
         unsigned int* ptr = static_cast<unsigned int*>(gl_index_buf->map(QGLBuffer::WriteOnly));
 
         if(ptr == nullptr){
@@ -416,7 +522,7 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<QVector3D> &data, size
     if(!buf->isCreated()) return false;
     if((offset + static_cast<size_t>(data.size())) * 3 > static_cast<size_t>(buf->size())) return false;
 
-    buf->bind();
+    if(!buf->bind()) return false;
         float* ptr = static_cast<float*>(buf->map(QGLBuffer::WriteOnly));
 
         if(ptr == nullptr) return false;
@@ -435,12 +541,25 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<QVector3D> &data, size
     return true;
 }
 
+bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<Point3f> &data, size_t offset)
+{
+    if(!buf->isCreated()) return false;
+    if((offset + static_cast<size_t>(data.size())) * 3 > static_cast<size_t>(buf->size())) return false;
+
+    if(!buf->bind()) return false;
+    buf->write(offset, data.data(), data.size() * sizeof(Point3f));
+    buf->unmap();
+    buf->release();
+
+    return true;
+}
+
 bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<qreal> &data, size_t offset)
 {
     if(!buf->isCreated()) return false;
     if((offset + static_cast<size_t>(data.size())) > static_cast<size_t>(buf->size())) return false;
 
-    buf->bind();
+    if(!buf->bind()) return false;
         float* ptr = static_cast<float*>(buf->map(QGLBuffer::WriteOnly));
 
         if(ptr == nullptr) return false;
@@ -450,6 +569,19 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<qreal> &data, size_t o
         for(size_t i = 0; i < static_cast<size_t>(data.size()); i ++){
             ptr[i] = data.at(i);
         }
+    buf->unmap();
+    buf->release();
+
+    return true;
+}
+
+bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<float> &data, size_t offset)
+{
+    if(!buf->isCreated()) return false;
+    if((offset + static_cast<size_t>(data.size())) * 3 > static_cast<size_t>(buf->size())) return false;
+
+    if(!buf->bind()) return false;
+    buf->write(offset, data.data(), data.size() * sizeof(float));
     buf->unmap();
     buf->release();
 

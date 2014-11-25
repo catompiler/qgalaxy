@@ -6,6 +6,7 @@
 #include <QVector3D>
 #include <QGLBuffer>
 #include <CL/opencl.h>
+#include "point3f.h"
 
 
 class CLPlatform;
@@ -36,12 +37,44 @@ public:
      */
     ~NBody();
 
+    /**
+     * @brief Получение числа тел.
+     * @return Число тел.
+     */
     size_t bodiesCount() const;
 
+    /**
+     * @brief Получение контекста OpenCL.
+     * @return Контекст OpenCL.
+     */
     CLContext* clcontext();
 
+    /**
+     * @brief Инициализация систему NBody.
+     * @param platform Платформа OpenCL.
+     * @param device Устройство OpenCL.
+     * @param bodies Число тел.
+     * @return true в случае успеха, иначе false.
+     */
     bool create(const CLPlatform &platform, const CLDevice &device, size_t bodies);
+
+    /**
+     * @brief Уничтожение системы NBody.
+     * @return true в случае успеха, иначе false.
+     */
     bool destroy();
+
+    /**
+     * @brief Получение флага готовности.
+     * @return Флаг готовности.
+     */
+    bool isReady() const;
+
+    /**
+     * @brief Получение флага выполнения вычислений.
+     * @return Флаг выполнения вычислений.
+     */
+    bool isRunning() const;
 
     /**
      * @brief Установка значений масс объектов.
@@ -52,6 +85,14 @@ public:
     bool setMasses(const QVector<qreal>& data, size_t offset = 0);
 
     /**
+     * @brief Установка значений масс объектов.
+     * @param data Значения масс.
+     * @param offset Смещение.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setMasses(const QVector<float>& data, size_t offset = 0);
+
+    /**
      * @brief Установка значений позиций объектов.
      * @param data Значения позиций.
      * @param offset Смещение.
@@ -60,12 +101,28 @@ public:
     bool setPositions(const QVector<QVector3D>& data, size_t offset = 0);
 
     /**
+     * @brief Установка значений позиций объектов.
+     * @param data Значения позиций.
+     * @param offset Смещение.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setPositions(const QVector<Point3f>& data, size_t offset = 0);
+
+    /**
      * @brief Установка значений скоростей объектов.
      * @param data Значения скоростей.
      * @param offset Смещение.
      * @return true в случае успеха, иначе false.
      */
     bool setVelocities(const QVector<QVector3D>& data, size_t offset = 0);
+
+    /**
+     * @brief Установка значений скоростей объектов.
+     * @param data Значения скоростей.
+     * @param offset Смещение.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setVelocities(const QVector<Point3f>& data, size_t offset = 0);
 
     /**
      * @brief Получение индексного буфера.
@@ -98,6 +155,8 @@ signals:
     void simulationFinished();
 
 public slots:
+
+    bool simulate(float dt);
 
 private:
     /**
@@ -278,7 +337,25 @@ private:
      * @param offset Смещение в буфере, в элементах вектора.
      * @return true в случае успеха, иначе false.
      */
+    bool setGLBufferData(QGLBuffer* buf, const QVector<Point3f>& data, size_t offset = 0);
+
+    /**
+     * @brief Запись в буфер данных.
+     * @param buf Буфер.
+     * @param data Данные.
+     * @param offset Смещение в буфере, в элементах вектора.
+     * @return true в случае успеха, иначе false.
+     */
     bool setGLBufferData(QGLBuffer* buf, const QVector<qreal>& data, size_t offset = 0);
+
+    /**
+     * @brief Запись в буфер данных.
+     * @param buf Буфер.
+     * @param data Данные.
+     * @param offset Смещение в буфере, в элементах вектора.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setGLBufferData(QGLBuffer* buf, const QVector<float>& data, size_t offset = 0);
 
     /**
      * @brief Создаёт буферы OpenCL.

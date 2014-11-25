@@ -10,5 +10,6 @@
         <file>vendor_nvidia.png</file>
         <file>run.png</file>
         <file>stop.png</file>
+        <file>star.png</file>
     </qresource>
 </RCC>

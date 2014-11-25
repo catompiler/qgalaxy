@@ -6,9 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>513</width>
-    <height>459</height>
+    <width>596</width>
+    <height>536</height>
    </rect>
+  </property>
+  <property name="mouseTracking">
+   <bool>true</bool>
   </property>
   <property name="windowTitle">
    <string>QGalaxy</string>
@@ -25,7 +28,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>513</width>
+     <width>596</width>
      <height>22</height>
     </rect>
    </property>
@@ -48,9 +51,16 @@
     <addaction name="actSimStart"/>
     <addaction name="actSimStop"/>
    </widget>
+   <widget class="QMenu" name="mnuGenerate">
+    <property name="title">
+     <string>&amp;Генерация</string>
+    </property>
+    <addaction name="actGenSGalaxy"/>
+   </widget>
    <addaction name="mnuFile"/>
    <addaction name="mnuSettings"/>
    <addaction name="mnuSim"/>
+   <addaction name="mnuGenerate"/>
   </widget>
   <widget class="QToolBar" name="toolBarFile">
    <property name="windowTitle">
@@ -182,6 +192,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+T</string>
+   </property>
+  </action>
+  <action name="actGenSGalaxy">
+   <property name="text">
+    <string>&amp;Спиральная галактика</string>
    </property>
   </action>
  </widget>

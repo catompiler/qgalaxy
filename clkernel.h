@@ -114,7 +114,7 @@ public:
      * @throw CLException в случае ошибки.
      */
     bool execute(const CLCommandQueue& queue, size_t work_dims,
-                 const QVector<size_t>& global_work_size, const QVector<size_t>& local_work_size,
+                 const size_t *global_work_size, const size_t *local_work_size,
                  const CLEventList* wait_events = nullptr, CLEvent* event = nullptr);
 
     /**

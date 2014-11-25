@@ -2,7 +2,6 @@
 #include "clcontext.h"
 
 
-
 CLEvent::CLEvent(QObject *parent) :
     QObject(parent)
 {
@@ -75,6 +74,17 @@ bool CLEvent::setStatus(cl_int status)
     return true;
 }
 
+bool CLEvent::isCompleted() const
+{
+    return status() == CL_COMPLETE;
+}
+
+bool CLEvent::isRunning() const
+{
+    cl_int ev_status = status();
+    return ev_status >= 0 && ev_status != CL_COMPLETE;
+}
+
 bool CLEvent::wait() const
 {
     CL_ERR_THROW(clWaitForEvents(1, &m_id));
@@ -129,7 +139,9 @@ void CLEvent::m_setId(cl_event ev_id)
 
 void CL_CALLBACK CLEvent::event_notify(cl_event /*event*/, cl_int exec_status, void* user_data)
 {
-    emit static_cast<CLEvent*>(user_data)->completed(exec_status);
+    if(user_data != nullptr){
+        emit static_cast<CLEvent*>(user_data)->completed(static_cast<int>(exec_status));
+    }
 }
 
 template<class T>

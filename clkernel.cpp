@@ -74,11 +74,9 @@ bool CLKernel::setLocalArgSize(size_t index, size_t size)
     return true;
 }
 
-bool CLKernel::execute(const CLCommandQueue &queue, size_t work_dims, const QVector<size_t> &global_work_size, const QVector<size_t> &local_work_size, const CLEventList *wait_events, CLEvent *event)
+bool CLKernel::execute(const CLCommandQueue &queue, size_t work_dims, const size_t* global_work_size, const size_t* local_work_size, const CLEventList *wait_events, CLEvent *event)
 {
     if(work_dims < 1 || work_dims > 3) return false;
-    if(static_cast<size_t>(global_work_size.size()) < work_dims ||
-       static_cast<size_t>(local_work_size.size())  < work_dims) return false;
 
     QVector<cl_event> wait_events_vec;
     const cl_event* wait_events_ptr = nullptr;
@@ -96,7 +94,7 @@ bool CLKernel::execute(const CLCommandQueue &queue, size_t work_dims, const QVec
 
     if(event) event_id_ptr = &event_id;
 
-    CL_ERR_THROW(clEnqueueNDRangeKernel(queue.id(), m_id, work_dims, nullptr, global_work_size.data(), local_work_size.data(), wait_events_vec.size(), wait_events_ptr, event_id_ptr));
+    CL_ERR_THROW(clEnqueueNDRangeKernel(queue.id(), m_id, work_dims, nullptr, global_work_size, local_work_size, wait_events_vec.size(), wait_events_ptr, event_id_ptr));
 
     if(event) event->setId(event_id);
 

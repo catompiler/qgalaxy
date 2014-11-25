@@ -11,7 +11,7 @@ TEMPLATE = app
 
 QMAKE_CXXFLAGS += -std=c++11
 
-LIBS += -L/usr/X11R6/lib64 -lGL -lOpenCL
+LIBS += -L/usr/X11R6/lib64 -lGL -lOpenCL -lGLU
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -29,7 +29,10 @@ SOURCES += main.cpp\
     clprogram.cpp \
     clkernel.cpp \
     nbodywidget.cpp \
-    nbody.cpp
+    nbody.cpp \
+    galaxy.cpp \
+    spiralgalaxy.cpp \
+    point3f.cpp
 
 HEADERS  += mainwindow.h \
     log.h \
@@ -47,7 +50,10 @@ HEADERS  += mainwindow.h \
     clprogram.h \
     clkernel.h \
     nbodywidget.h \
-    nbody.h
+    nbody.h \
+    galaxy.h \
+    spiralgalaxy.h \
+    point3f.h
 
 FORMS    += mainwindow.ui \
     oclsettingsdialog.ui

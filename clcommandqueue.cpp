@@ -73,6 +73,25 @@ bool CLCommandQueue::finish()
     return true;
 }
 
+bool CLCommandQueue::marker(CLEvent *event)
+{
+    if(event == nullptr) return false;
+
+    cl_event event_id = nullptr;
+
+    CL_ERR_THROW(clEnqueueMarker(m_id, &event_id));
+
+    event->setId(event_id);
+
+    return true;
+}
+
+bool CLCommandQueue::barrier()
+{
+    CL_ERR_THROW(clEnqueueBarrier(m_id));
+    return true;
+}
+
 cl_context CLCommandQueue::contextId() const
 {
     return getInfoValue<cl_context>(CL_QUEUE_CONTEXT);

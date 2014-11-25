@@ -2,7 +2,7 @@
 #define CLBUFFER_H
 
 #include <CL/opencl.h>
-#include <GL/gl3.h>
+#include <QtOpenGL>
 #include "clevent.h"
 
 class CLContext;
