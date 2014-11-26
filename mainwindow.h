@@ -32,7 +32,7 @@ private slots:
     void on_actSimStart_triggered();
     void on_actSimStop_triggered();
     void on_actGenSGalaxy_triggered();
-
+    void on_actGenGalaxyCollision_triggered();
 private:
     void refreshUi();
 

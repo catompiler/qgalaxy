@@ -396,7 +396,7 @@ bool NBody::createCLProgram()
     }
 
     try{
-        clprogram->build(clcxt->devices(), QStringList());// << "-cl-mad-enable" << "-cl-fast-relaxed-math");
+        clprogram->build(clcxt->devices(), QStringList() << "-cl-mad-enable" << "-cl-fast-relaxed-math");
     }catch(CLException& e){
         log(Log::ERROR, LOG_WHO, e.what());
 
@@ -547,7 +547,7 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<Point3f> &data, size_t
     if((offset + static_cast<size_t>(data.size())) * 3 > static_cast<size_t>(buf->size())) return false;
 
     if(!buf->bind()) return false;
-    buf->write(offset, data.data(), data.size() * sizeof(Point3f));
+    buf->write(offset * sizeof(float) * 3, data.data(), data.size() * sizeof(Point3f));
     buf->unmap();
     buf->release();
 
@@ -581,7 +581,7 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<float> &data, size_t o
     if((offset + static_cast<size_t>(data.size())) * 3 > static_cast<size_t>(buf->size())) return false;
 
     if(!buf->bind()) return false;
-    buf->write(offset, data.data(), data.size() * sizeof(float));
+    buf->write(offset * sizeof(float), data.data(), data.size() * sizeof(float));
     buf->unmap();
     buf->release();
 

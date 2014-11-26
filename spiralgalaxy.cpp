@@ -24,17 +24,19 @@ bool SpiralGalaxy::generate()
     //QVector3D bh_pos = QVector3D(0.0,0.0,0.0);
     const QVector3D galaxy_up = QVector3D(0.0, 1.0, 0.0);
 
-    const size_t spirals_count = rand() % 4 + 2;
+    const size_t spirals_count = (rand() % 3 + 1) * 2;
 
     const size_t other_stars_count = m_stars_count - 2;
     const qreal average_mass = (m_star_mass_min + m_star_mass_max) * 0.5f;
 
     #define DEFAULT_ECCENTRICITY 0.35
-    const qreal ellipse_eccentricity = getRanduf() * 0.3 + 0.2;
+    const qreal ellipse_eccentricity = getRandsf() * 0.1 + DEFAULT_ECCENTRICITY;
 
     const qreal _2pi = 2.0 * M_PI;
-    const qreal angle_max = _2pi + M_PI * getRandsf();
-    const qreal angle_delta = 0.25 * M_PI / spirals_count;
+    const qreal angle_max = 0.25 * M_PI * spirals_count + _2pi * getRanduf() / spirals_count;
+    const qreal angle_delta = (0.125 + getRandsf() * 0.005) * angle_max / spirals_count;
+
+    //qDebug() << "spirals_count" << spirals_count << "angle_max" << angle_max << "angle_delta" << angle_delta;
 
     qreal orbit_angle;
     qreal orbit_phase_angle;

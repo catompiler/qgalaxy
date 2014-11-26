@@ -168,6 +168,37 @@ void MainWindow::on_actGenSGalaxy_triggered()
     }
 }
 
+void MainWindow::on_actGenGalaxyCollision_triggered()
+{
+    SpiralGalaxy galaxy1;
+    SpiralGalaxy galaxy2;
+
+    size_t g1_count = Settings::get().bodiesCount() / 2;
+
+    galaxy1.setStarsCount(g1_count);
+    galaxy1.setRadius(1000);
+    galaxy1.setMinStarMass(1e-1);
+    galaxy1.setMaxStarMass(2e-1);
+    galaxy1.setBlackHoleMass(8e5);
+    galaxy1.setPosition(QVector3D(-1500.0, 100.0, 0.0));
+    galaxy1.setOrientation(QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, -45));
+    galaxy1.setVelocity(QVector3D(-1000.0, 1500.0, 0.0));
+
+    galaxy2.setStarsCount(Settings::get().bodiesCount() - g1_count);
+    galaxy2.setRadius(1000);
+    galaxy2.setMinStarMass(1e-1);
+    galaxy2.setMaxStarMass(2e-1);
+    galaxy2.setBlackHoleMass(8e5);
+    galaxy2.setPosition(QVector3D(1500.0, -100.0, 0.0));
+    galaxy2.setOrientation(QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, 45));
+    galaxy2.setVelocity(QVector3D(1000.0, -1500.0, 0.0));
+
+    if(galaxy1.generate() && galaxy2.generate()){
+        nbodyWidget->setBodies(0,        galaxy1.starsMasses(), galaxy1.starsPositons(), galaxy1.starsVelosities());
+        nbodyWidget->setBodies(g1_count, galaxy2.starsMasses(), galaxy2.starsPositons(), galaxy2.starsVelosities());
+    }
+}
+
 void MainWindow::refreshUi()
 {
 }

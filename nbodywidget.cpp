@@ -178,7 +178,7 @@ void NBodyWidget::resizeGL(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, static_cast<float>(width)/height, 1, 10000);
+    gluPerspective(45, static_cast<float>(width)/height, 1, 100000);
     glMatrixMode(GL_MODELVIEW);
 }
 

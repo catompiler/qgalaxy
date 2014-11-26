@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>596</width>
-    <height>536</height>
+    <width>590</width>
+    <height>530</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -28,7 +28,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>596</width>
+     <width>590</width>
      <height>22</height>
     </rect>
    </property>
@@ -56,6 +56,7 @@
      <string>&amp;Генерация</string>
     </property>
     <addaction name="actGenSGalaxy"/>
+    <addaction name="actGenGalaxyCollision"/>
    </widget>
    <addaction name="mnuFile"/>
    <addaction name="mnuSettings"/>
@@ -133,7 +134,7 @@
    </attribute>
    <addaction name="actSettingsOCL"/>
   </widget>
-  <widget class="QToolBar" name="toolBar">
+  <widget class="QToolBar" name="toolBarSimulation">
    <property name="windowTitle">
     <string>Выполнение</string>
    </property>
@@ -145,6 +146,19 @@
    </attribute>
    <addaction name="actSimStart"/>
    <addaction name="actSimStop"/>
+  </widget>
+  <widget class="QToolBar" name="toolBarGeneration">
+   <property name="windowTitle">
+    <string>toolBar_2</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actGenSGalaxy"/>
+   <addaction name="actGenGalaxyCollision"/>
   </widget>
   <action name="actExit">
    <property name="icon">
@@ -167,7 +181,7 @@
     <string>&amp;Настройки OpenCL</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+S</string>
+    <string>Ctrl+T</string>
    </property>
   </action>
   <action name="actSimStart">
@@ -191,12 +205,31 @@
     <string>&amp;Остановить</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+T</string>
+    <string>Ctrl+E</string>
    </property>
   </action>
   <action name="actGenSGalaxy">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/images/galaxy.png</normaloff>:/images/galaxy.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Спиральная галактика</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
+   </property>
+  </action>
+  <action name="actGenGalaxyCollision">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/images/galaxys.png</normaloff>:/images/galaxys.png</iconset>
+   </property>
+   <property name="text">
+    <string>С&amp;толкновение галактик</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
    </property>
   </action>
  </widget>

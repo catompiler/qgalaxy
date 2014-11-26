@@ -11,5 +11,7 @@
         <file>run.png</file>
         <file>stop.png</file>
         <file>star.png</file>
+        <file>galaxy.png</file>
+        <file>galaxys.png</file>
     </qresource>
 </RCC>
