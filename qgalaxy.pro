@@ -11,7 +11,15 @@ TEMPLATE = app
 
 QMAKE_CXXFLAGS += -std=c++11
 
-LIBS += -L/usr/X11R6/lib64 -lGL -lOpenCL -lGLU
+linux32 {
+    LIBS += -L/usr/X11R6/lib
+}
+
+linux64 {
+    LIBS += -L/usr/X11R6/lib64
+}
+
+LIBS += -lGL -lOpenCL -lGLU
 
 SOURCES += main.cpp\
         mainwindow.cpp \

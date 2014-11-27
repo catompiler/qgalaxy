@@ -312,7 +312,7 @@ private:
      * @param item_size_bytes Размер элемента буфера в байтах.
      * @return true в случае успеха, иначе false.
      */
-    bool createGLBuffer(QGLBuffer* buf, QGLBuffer::UsagePattern usage, size_t item_size_bytes);
+    bool createGLBuffer(QGLBuffer* buf, QGLBuffer::UsagePattern usage, size_t item_size_bytes, const void* data = nullptr);
 
     /**
      * @brief Уничтожает буфер OpenGL.

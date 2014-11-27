@@ -21,7 +21,7 @@ CLException::~CLException() noexcept
 
 const char *CLException::what() const noexcept
 {
-    return m_what.toUtf8().data();
+    return (m_what + QObject::tr("(%1)").arg(m_err_code)).toUtf8().data();
 }
 
 cl_int CLException::errorCode() const noexcept

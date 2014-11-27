@@ -29,7 +29,7 @@ bool SpiralGalaxy::generate()
     const size_t other_stars_count = m_stars_count - 2;
     const qreal average_mass = (m_star_mass_min + m_star_mass_max) * 0.5f;
 
-    #define DEFAULT_ECCENTRICITY 0.35
+    #define DEFAULT_ECCENTRICITY 0.35 //0.35
     const qreal ellipse_eccentricity = getRandsf() * 0.1 + DEFAULT_ECCENTRICITY;
 
     const qreal _2pi = 2.0 * M_PI;
@@ -98,7 +98,7 @@ bool SpiralGalaxy::generate()
 
         // Угол поворота орбиты.
         orbit_angle = lerp(static_cast<qreal>(0.0), static_cast<qreal>(angle_max),
-                    (r_a - min_radius) / avail_dradius);
+                    ((r_a - min_radius) / avail_dradius));
         orbit_angle += getRandsf() * angle_delta;
         orbit_angle += rand() % spirals_count * (_2pi / spirals_count);
 

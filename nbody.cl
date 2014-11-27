@@ -1,7 +1,7 @@
 __kernel void kernel_main(unsigned int count,
                            __global float* positions_in, __global float* positions_out,
                            __global float* velocities_in, __global float* velocities_out,
-                           __constant float* masses,
+                           __global float* masses,
                            float dt)
 {
     unsigned int id;

@@ -114,13 +114,18 @@ void MainWindow::on_actSettingsOCL_triggered()
     try{
 
         CLPlatform platform = CLPlatform::byName(Settings::get().clPlatformName());
-        oclSettingsDlg->setCurrentPlatform(platform);
+        if(platform.isValid()){
 
-        CLDevice device = platform.deviceByName(Settings::get().clDeviceName());
-        oclSettingsDlg->setCurrentDevice(device);
+            oclSettingsDlg->setCurrentPlatform(platform);
+            CLDevice device = platform.deviceByName(Settings::get().clDeviceName());
+
+            if(device.isValid()){
+                oclSettingsDlg->setCurrentDevice(device);
+            }
+        }
 
     }catch(CLException& e){
-        log(Log::ERROR, LOG_WHO, e.what());
+        //log(Log::ERROR, LOG_WHO, e.what());
         //QMessageBox::critical(this, tr("Ошибка!"), e.what());
     }
 

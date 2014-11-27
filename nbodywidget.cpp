@@ -9,6 +9,7 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <GL/glu.h>
+#include <QMatrix4x4>
 
 
 
@@ -157,6 +158,8 @@ void NBodyWidget::initializeGL()
             has_point_sprite = true;
             glBindTexture(GL_TEXTURE_2D, 0);
         }
+    }else{
+        log(Log::WARNING, LOG_WHO, tr("GL_ARB_point_sprite is not supported!"));
     }
 
     if(has_point_sprite){
@@ -206,8 +209,12 @@ void NBodyWidget::paintGL()
     }
 
     glPushMatrix();
-    glRotatef(rot_x, 1.0, 0.0, 0.0);
-    glRotatef(rot_y, 0.0, 1.0, 0.0);
+    //glTranslatef(0.0, 0.0, -view_distance);
+    //glRotatef(rot_x, 1.0, 0.0, 0.0);
+    //glRotatef(rot_y, 0.0, 1.0, 0.0);
+    QMatrix4x4 rot_mat;
+    rot_mat.rotate(rot_quat);
+    glMultMatrixd(rot_mat.data());
 
     nbody->posBuffer()->bind();
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -238,8 +245,13 @@ void NBodyWidget::paintGL()
 void NBodyWidget::mouseMoveEvent(QMouseEvent *event)
 {
     if(event->buttons() != Qt::NoButton){
-        rot_x += event->y() - old_rot_x;
-        rot_y += event->x() - old_rot_y;
+        rot_x = event->y() - old_rot_x;
+        rot_y = event->x() - old_rot_y;
+
+        QQuaternion q_rot_x = QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, rot_x);
+        QQuaternion q_rot_y = QQuaternion::fromAxisAndAngle(0.0, 1.0, 0.0, rot_y);
+
+        rot_quat = q_rot_x * q_rot_y * rot_quat;
 
         if(!nbody->isRunning()) update();
     }

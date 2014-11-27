@@ -28,7 +28,7 @@ Settings &Settings::get()
 void Settings::read()
 {
     QSettings settings(company_name, app_name);
-    bodies_count = settings.value(param_bodies_count, 100U).toUInt();
+    bodies_count = settings.value(param_bodies_count, 1024U).toUInt();
     cl_platform_name = settings.value(param_cl_platform_name, QString()).toString();
     cl_device_name = settings.value(param_cl_device_name, QString()).toString();
 }

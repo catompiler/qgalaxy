@@ -101,15 +101,29 @@ CLContext *NBody::clcontext()
 
 bool NBody::create(const CLPlatform& platform, const CLDevice& device, size_t bodies)
 {
-    if(is_ready) destroy();
-
     if(bodies == 0) return false;
+
+    try{
+        size_t mem_size = device.maxMemAllocSize();
+        if(mem_size < bodies * sizeof(float) * (3 /*pos_in*/ + 3 /*pos_out*/ + 1 /*masses*/)){
+            log(Log::ERROR, LOG_WHO, tr("Out of memory!"));
+            return false;
+        }
+    }catch(CLException& e){
+        log(Log::WARNING, LOG_WHO, e.what());
+    }
+
+    if(is_ready) destroy();
 
     bodies_count = bodies;
 
-    if(!createGLBuffers()) return false;
+    if(!createGLBuffers()){
+        log(Log::ERROR, LOG_WHO, tr("Error creating OpenGL buffers!"));
+        return false;
+    }
 
     if(!initOpenCL(platform, device)){
+        log(Log::ERROR, LOG_WHO, tr("Error initializing OpenCL!"));
         destroyGLBuffers();
         return false;
     }
@@ -446,17 +460,18 @@ bool NBody::createGLBuffers()
 {
     bool res = false;
 
-    res = createGLBuffer(gl_mass_buf,  QGLBuffer::StaticDraw, sizeof(float)) &&
+    QVector<float> init_data(bodies_count * 3);
+
+    res = createGLBuffer(gl_mass_buf,  QGLBuffer::StaticDraw, sizeof(float), init_data.data()) &&
           createGLBuffer(gl_index_buf, QGLBuffer::StaticDraw, sizeof(unsigned int));
     if(!res){
         destroyGLBuffers();
         return false;
     }
 
-
     for(size_t i = 0; i < switch_buffers_count; i ++){
-        res = createGLBuffer(gl_pos_buf[i], QGLBuffer::StaticDraw, sizeof(float) * 3) &&
-              createGLBuffer(gl_vel_buf[i], QGLBuffer::StaticDraw, sizeof(float) * 3);
+        res = createGLBuffer(gl_pos_buf[i], QGLBuffer::StaticDraw, sizeof(float) * 3, init_data.data()) &&
+              createGLBuffer(gl_vel_buf[i], QGLBuffer::StaticDraw, sizeof(float) * 3, init_data.data());
         if(!res){
             destroyGLBuffers();
             return false;
@@ -499,12 +514,12 @@ bool NBody::destroyGLBuffers()
     return true;
 }
 
-bool NBody::createGLBuffer(QGLBuffer *buf, QGLBuffer::UsagePattern usage, size_t item_size_bytes)
+bool NBody::createGLBuffer(QGLBuffer *buf, QGLBuffer::UsagePattern usage, size_t item_size_bytes, const void *data)
 {
     if(!buf->create()) return false;
     if(!buf->bind()) return false;
     buf->setUsagePattern(usage);
-    buf->allocate(item_size_bytes * bodies_count);
+    buf->allocate(data, item_size_bytes * bodies_count);
     return true;
 }
 

@@ -4,6 +4,7 @@
 #include <QGLWidget>
 #include <QtOpenGL>
 #include <QVector>
+#include <QQuaternion>
 #include "point3f.h"
 
 
@@ -50,6 +51,8 @@ private:
     float rot_y;
     float old_rot_x;
     float old_rot_y;
+
+    QQuaternion rot_quat;
 };
 
 #endif // NBODYWIDGET_H

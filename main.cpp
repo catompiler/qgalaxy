@@ -4,10 +4,12 @@
 #include "mainwindow.h"
 #include "settings.h"
 
+//#define LIST_CL_PLATFORMS_DEVICES
+
+#ifdef LIST_CL_PLATFORMS_DEVICES
 #include <QDebug>
 #include "clplatform.h"
 #include "cldevice.h"
-
 
 void test(){
     CLPlatformList platforms = CLPlatform::getPlatforms();
@@ -22,7 +24,7 @@ void test(){
         }
     }
 }
-
+#endif
 
 
 int main(int argc, char *argv[])
@@ -36,7 +38,9 @@ int main(int argc, char *argv[])
 
     w.show();
 
+#ifdef LIST_CL_PLATFORMS_DEVICES
     test();
+#endif
 
     int exec_result = a.exec();
 
