@@ -31,6 +31,18 @@ public:
     void setBodiesCount(size_t count);
     size_t bodiesCount() const;
 
+    /**
+     * @brief Получение шага симуляции.
+     * @return Шаг симуляции.
+     */
+    float timeStep() const;
+
+    /**
+     * @brief Установка шага симуляции.
+     * @param dt Шаг симуляции.
+     */
+    void setTimeStep(float dt);
+
 private slots:
     void on_cbPlatform_currentIndexChanged(int index);
     void on_cbDevice_currentIndexChanged(int index);

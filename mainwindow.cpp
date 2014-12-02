@@ -12,6 +12,7 @@
 #include "log.h"
 #include "settings.h"
 #include "oclsettingsdialog.h"
+#include "editbodydialog.h"
 #include "nbodywidget.h"
 #include "spiralgalaxy.h"
 
@@ -38,11 +39,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     oclSettingsDlg = nullptr;
 
+    editBodyDlg = nullptr;
+
     refreshUi();
 }
 
 MainWindow::~MainWindow()
 {
+    delete editBodyDlg;
     delete oclSettingsDlg;
     delete nbodyWidget;
     delete ui;
@@ -130,6 +134,7 @@ void MainWindow::on_actSettingsOCL_triggered()
     }
 
     oclSettingsDlg->setBodiesCount(Settings::get().bodiesCount());
+    oclSettingsDlg->setTimeStep(Settings::get().timeStep());
 
     if(oclSettingsDlg->exec() == QDialog::Accepted){
 
@@ -138,6 +143,7 @@ void MainWindow::on_actSettingsOCL_triggered()
             Settings::get().setClPlatformName(oclSettingsDlg->currentPlatform().name());
             Settings::get().setClDeviceName(oclSettingsDlg->currentDevice().name());
             Settings::get().setBodiesCount(oclSettingsDlg->bodiesCount());
+            Settings::get().setTimeStep(oclSettingsDlg->timeStep());
 
             nbodyWidget->recreateNBody();
 
@@ -168,7 +174,7 @@ void MainWindow::on_actGenSGalaxy_triggered()
     galaxy.setRadius(2000.0);
     galaxy.setMinStarMass(5e-1);
     galaxy.setMaxStarMass(2e0);
-    galaxy.setBlackHoleMass(1e6);//8e5
+    galaxy.setBlackHoleMass(1e7);//8e5
 
     if(galaxy.generate()){
         nbodyWidget->setBodies(0, galaxy.starsMasses(), galaxy.starsPositons(), galaxy.starsVelosities());
@@ -186,24 +192,32 @@ void MainWindow::on_actGenGalaxyCollision_triggered()
     galaxy1.setRadius(1000);
     galaxy1.setMinStarMass(5e-1);
     galaxy1.setMaxStarMass(2e0);
-    galaxy1.setBlackHoleMass(1e6);
+    galaxy1.setBlackHoleMass(1e7);
     galaxy1.setPosition(QVector3D(-1500.0, 100.0, 0.0));
     galaxy1.setOrientation(QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, -45));
-    galaxy1.setVelocity(QVector3D(0.0e-6, 1.5e-6, 0.0));
+    galaxy1.setVelocity(QVector3D(-1.5e-6, 6.5e-6, 0.0));
 
     galaxy2.setStarsCount(Settings::get().bodiesCount() - g1_count);
     galaxy2.setRadius(1000);
     galaxy2.setMinStarMass(5e-1);
     galaxy2.setMaxStarMass(1e0);
-    galaxy2.setBlackHoleMass(1e6);
+    galaxy2.setBlackHoleMass(1e7);
     galaxy2.setPosition(QVector3D(1500.0, -100.0, 0.0));
     galaxy2.setOrientation(QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, 45));
-    galaxy2.setVelocity(QVector3D(0.0e-6, -1.5e-6, 0.0));
+    galaxy2.setVelocity(QVector3D(1.5e-6, -6.5e-6, 0.0));
 
     if(galaxy1.generate() && galaxy2.generate()){
         nbodyWidget->setBodies(0,        galaxy1.starsMasses(), galaxy1.starsPositons(), galaxy1.starsVelosities());
         nbodyWidget->setBodies(g1_count, galaxy2.starsMasses(), galaxy2.starsPositons(), galaxy2.starsVelosities());
     }
+}
+
+void MainWindow::on_actSimEdit_triggered()
+{
+    if(editBodyDlg == nullptr)
+        editBodyDlg = new EditBodyDialog(nbodyWidget, this);
+
+    editBodyDlg->exec();
 }
 
 void MainWindow::refreshUi()

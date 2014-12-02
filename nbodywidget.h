@@ -20,7 +20,12 @@ public:
     explicit NBodyWidget(QWidget *parent = 0);
     ~NBodyWidget();
 
+    size_t bodiesCount() const;
+
+    bool setBodies(size_t offset, const QVector<qreal>& masses, const QVector<QVector3D>& positions, const QVector<QVector3D>& velocities);
     bool setBodies(size_t offset, const QVector<float>& masses, const QVector<Point3f>& positions, const QVector<Point3f>& velocities);
+    bool getBodies(size_t offset, size_t count, QVector<qreal> &masses, QVector<QVector3D> &positions, QVector<QVector3D> &velocities);
+    bool getBodies(size_t offset, size_t count, QVector<float> &masses, QVector<Point3f> &positions, QVector<Point3f> &velocities);
 
 signals:
 

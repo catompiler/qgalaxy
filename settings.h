@@ -25,6 +25,9 @@ public:
 
     QString clDeviceName() const;
     void setClDeviceName(const QString& name);
+
+    float timeStep() const;
+    void setTimeStep(float dt);
     
 signals:
     void settingsChanged();
@@ -38,6 +41,7 @@ private:
     size_t bodies_count;
     QString cl_platform_name;
     QString cl_device_name;
+    float time_step;
 };
 
 #endif // SETTINGS_H

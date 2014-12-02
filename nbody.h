@@ -44,6 +44,18 @@ public:
     size_t bodiesCount() const;
 
     /**
+     * @brief Получение шага симуляции.
+     * @return Шаг симуляции.
+     */
+    float timeStep() const;
+
+    /**
+     * @brief Установка шага симуляции.
+     * @param dt Шаг симуляции.
+     */
+    void setTimeStep(float dt);
+
+    /**
      * @brief Получение контекста OpenCL.
      * @return Контекст OpenCL.
      */
@@ -125,6 +137,60 @@ public:
     bool setVelocities(const QVector<Point3f>& data, size_t offset = 0);
 
     /**
+     * @brief Получение значений масс объектов.
+     * @param data Значения масс.
+     * @param offset Смещение.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getMasses(QVector<qreal>& data, size_t offset = 0, size_t count = 0) const;
+
+    /**
+     * @brief Получение значений масс объектов.
+     * @param data Значения масс.
+     * @param offset Смещение.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getMasses(QVector<float>& data, size_t offset = 0, size_t count = 0) const;
+
+    /**
+     * @brief Получение значений позиций объектов.
+     * @param data Значения позиций.
+     * @param offset Смещение.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getPositions(QVector<QVector3D>& data, size_t offset = 0, size_t count = 0) const;
+
+    /**
+     * @brief Получение значений позиций объектов.
+     * @param data Значения позиций.
+     * @param offset Смещение.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getPositions(QVector<Point3f>& data, size_t offset = 0, size_t count = 0) const;
+
+    /**
+     * @brief Получение значений скоростей объектов.
+     * @param data Значения скоростей.
+     * @param offset Смещение.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getVelocities(QVector<QVector3D>& data, size_t offset = 0, size_t count = 0) const;
+
+    /**
+     * @brief Получение значений скоростей объектов.
+     * @param data Значения скоростей.
+     * @param offset Смещение.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getVelocities(QVector<Point3f>& data, size_t offset = 0, size_t count = 0) const;
+
+    /**
      * @brief Получение индексного буфера.
      * @return Индексный буфер.
      */
@@ -156,6 +222,7 @@ signals:
 
 public slots:
 
+    bool simulate();
     bool simulate(float dt);
 
 private:
@@ -163,6 +230,11 @@ private:
      * @brief Число объектов.
      */
     size_t bodies_count;
+
+    /**
+     * @brief Шаг симуляции.
+     */
+    float time_step;
 
     /**
      * @brief Флаг готовности.
@@ -356,6 +428,46 @@ private:
      * @return true в случае успеха, иначе false.
      */
     bool setGLBufferData(QGLBuffer* buf, const QVector<float>& data, size_t offset = 0);
+
+    /**
+     * @brief Чтение из буфера данных.
+     * @param buf Буфер.
+     * @param data Данные.
+     * @param offset Смещение в буфере, в элементах вектора.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getGLBufferData(QGLBuffer* buf, QVector<QVector3D>& data, size_t offset = 0, size_t count = 0) const;
+
+    /**
+     * @brief Чтение из буфера данных.
+     * @param buf Буфер.
+     * @param data Данные.
+     * @param offset Смещение в буфере, в элементах вектора.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getGLBufferData(QGLBuffer* buf, QVector<Point3f>& data, size_t offset = 0, size_t count = 0) const;
+
+    /**
+     * @brief Чтение из буфера данных.
+     * @param buf Буфер.
+     * @param data Данные.
+     * @param offset Смещение в буфере, в элементах вектора.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getGLBufferData(QGLBuffer* buf, QVector<qreal>& data, size_t offset = 0, size_t count = 0) const;
+
+    /**
+     * @brief Чтение из буфера данных.
+     * @param buf Буфер.
+     * @param data Данные.
+     * @param offset Смещение в буфере, в элементах вектора.
+     * @param count Количество.
+     * @return true в случае успеха, иначе false.
+     */
+    bool getGLBufferData(QGLBuffer* buf, QVector<float>& data, size_t offset = 0, size_t count = 0) const;
 
     /**
      * @brief Создаёт буферы OpenCL.

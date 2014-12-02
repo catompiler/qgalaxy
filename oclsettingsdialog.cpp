@@ -65,6 +65,16 @@ size_t OCLSettingsDialog::bodiesCount() const
     return ui->sbBodiesCount->value();
 }
 
+float OCLSettingsDialog::timeStep() const
+{
+    return ui->dsbTimeStep->value();
+}
+
+void OCLSettingsDialog::setTimeStep(float dt)
+{
+    ui->dsbTimeStep->setValue(dt);
+}
+
 void OCLSettingsDialog::on_cbPlatform_currentIndexChanged(int index)
 {
     if(index != -1){

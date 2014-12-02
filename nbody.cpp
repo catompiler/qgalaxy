@@ -41,6 +41,8 @@ NBody::NBody(QObject *parent) :
 {
     bodies_count = 0;
 
+    time_step = 0.0f;
+
     is_ready = false;
 
     current_in = 0;
@@ -92,6 +94,16 @@ NBody::~NBody()
 size_t NBody::bodiesCount() const
 {
     return bodies_count;
+}
+
+float NBody::timeStep() const
+{
+    return time_step;
+}
+
+void NBody::setTimeStep(float dt)
+{
+    time_step = dt;
 }
 
 CLContext *NBody::clcontext()
@@ -198,6 +210,36 @@ bool NBody::setVelocities(const QVector<Point3f> &data, size_t offset)
     return setGLBufferData(gl_vel_buf[current_in], data, offset);
 }
 
+bool NBody::getMasses(QVector<qreal> &data, size_t offset, size_t count) const
+{
+    return getGLBufferData(gl_mass_buf, data, offset, count);
+}
+
+bool NBody::getMasses(QVector<float> &data, size_t offset, size_t count) const
+{
+    return getGLBufferData(gl_mass_buf, data, offset, count);
+}
+
+bool NBody::getPositions(QVector<QVector3D> &data, size_t offset, size_t count) const
+{
+    return getGLBufferData(gl_pos_buf[current_in], data, offset, count);
+}
+
+bool NBody::getPositions(QVector<Point3f> &data, size_t offset, size_t count) const
+{
+    return getGLBufferData(gl_pos_buf[current_in], data, offset, count);
+}
+
+bool NBody::getVelocities(QVector<QVector3D> &data, size_t offset, size_t count) const
+{
+    return getGLBufferData(gl_vel_buf[current_in], data, offset, count);
+}
+
+bool NBody::getVelocities(QVector<Point3f> &data, size_t offset, size_t count) const
+{
+    return getGLBufferData(gl_vel_buf[current_in], data, offset, count);
+}
+
 QGLBuffer *NBody::indexBuffer()
 {
     return gl_index_buf;
@@ -216,6 +258,11 @@ QGLBuffer *NBody::posBuffer()
 QGLBuffer *NBody::velBuffer()
 {
     return gl_vel_buf[current_in];
+}
+
+bool NBody::simulate()
+{
+    return simulate(time_step);
 }
 
 bool NBody::simulate(float dt)
@@ -563,7 +610,6 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<Point3f> &data, size_t
 
     if(!buf->bind()) return false;
     buf->write(offset * sizeof(float) * 3, data.data(), data.size() * sizeof(Point3f));
-    buf->unmap();
     buf->release();
 
     return true;
@@ -597,7 +643,75 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<float> &data, size_t o
 
     if(!buf->bind()) return false;
     buf->write(offset * sizeof(float), data.data(), data.size() * sizeof(float));
+    buf->release();
+
+    return true;
+}
+
+bool NBody::getGLBufferData(QGLBuffer *buf, QVector<QVector3D> &data, size_t offset, size_t count) const
+{
+    if(!buf->isCreated()) return false;
+    if((offset + count) * 3 > static_cast<size_t>(buf->size())) return false;
+
+    if(!buf->bind()) return false;
+        float* ptr = static_cast<float*>(buf->map(QGLBuffer::WriteOnly));
+
+        if(ptr == nullptr) return false;
+
+        ptr += offset * 3;
+
+        for(size_t i = 0; i < count; i ++){
+            data.append(QVector3D(ptr[0], ptr[1], ptr[2]));
+            ptr += 3;
+        }
     buf->unmap();
+    buf->release();
+
+    return true;
+}
+
+bool NBody::getGLBufferData(QGLBuffer *buf, QVector<Point3f> &data, size_t offset, size_t count) const
+{
+    if(!buf->isCreated()) return false;
+    if((offset + count) * 3 > static_cast<size_t>(buf->size())) return false;
+
+    if(!buf->bind()) return false;
+    data.resize(data.size() + count);
+    buf->read(offset * sizeof(float) * 3, data.data(), count * sizeof(Point3f));
+    buf->release();
+
+    return true;
+}
+
+bool NBody::getGLBufferData(QGLBuffer *buf, QVector<qreal> &data, size_t offset, size_t count) const
+{
+    if(!buf->isCreated()) return false;
+    if((offset + count) > static_cast<size_t>(buf->size())) return false;
+
+    if(!buf->bind()) return false;
+        float* ptr = static_cast<float*>(buf->map(QGLBuffer::WriteOnly));
+
+        if(ptr == nullptr) return false;
+
+        ptr += offset;
+
+        for(size_t i = 0; i < count; i ++){
+            data.append(ptr[i]);
+        }
+    buf->unmap();
+    buf->release();
+
+    return true;
+}
+
+bool NBody::getGLBufferData(QGLBuffer *buf, QVector<float> &data, size_t offset, size_t count) const
+{
+    if(!buf->isCreated()) return false;
+    if((offset + count) * 3 > static_cast<size_t>(buf->size())) return false;
+
+    if(!buf->bind()) return false;
+    data.resize(data.size() + count);
+    buf->read(offset * sizeof(float), data.data(), count * sizeof(float));
     buf->release();
 
     return true;

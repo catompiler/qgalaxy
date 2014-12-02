@@ -40,7 +40,8 @@ SOURCES += main.cpp\
     nbody.cpp \
     galaxy.cpp \
     spiralgalaxy.cpp \
-    point3f.cpp
+    point3f.cpp \
+    editbodydialog.cpp
 
 HEADERS  += mainwindow.h \
     log.h \
@@ -61,10 +62,12 @@ HEADERS  += mainwindow.h \
     nbody.h \
     galaxy.h \
     spiralgalaxy.h \
-    point3f.h
+    point3f.h \
+    editbodydialog.h
 
 FORMS    += mainwindow.ui \
-    oclsettingsdialog.ui
+    oclsettingsdialog.ui \
+    editbodydialog.ui
 
 RESOURCES += \
     res.qrc

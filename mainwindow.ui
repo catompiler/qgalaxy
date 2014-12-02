@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>588</width>
-    <height>528</height>
+    <width>586</width>
+    <height>526</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -28,7 +28,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>588</width>
+     <width>586</width>
      <height>22</height>
     </rect>
    </property>
@@ -53,6 +53,8 @@
     </property>
     <addaction name="actSimStart"/>
     <addaction name="actSimStop"/>
+    <addaction name="separator"/>
+    <addaction name="actSimEdit"/>
    </widget>
    <widget class="QMenu" name="mnuGenerate">
     <property name="title">
@@ -149,6 +151,7 @@
    </attribute>
    <addaction name="actSimStart"/>
    <addaction name="actSimStop"/>
+   <addaction name="actSimEdit"/>
   </widget>
   <widget class="QToolBar" name="toolBarGeneration">
    <property name="windowTitle">
@@ -184,7 +187,7 @@
     <string>&amp;Настройки OpenCL</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+T</string>
+    <string>Ctrl+L</string>
    </property>
   </action>
   <action name="actSimStart">
@@ -208,7 +211,7 @@
     <string>&amp;Остановить</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+E</string>
+    <string>Ctrl+T</string>
    </property>
   </action>
   <action name="actGenSGalaxy">
@@ -257,6 +260,18 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actSimEdit">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/images/edit.png</normaloff>:/images/edit.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Редактировать</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
  </widget>

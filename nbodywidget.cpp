@@ -77,12 +77,19 @@ NBodyWidget::~NBodyWidget()
     delete nbody;
 }
 
-bool NBodyWidget::setBodies(size_t offset, const QVector<float> &masses, const QVector<Point3f> &positions, const QVector<Point3f> &velocities)
+size_t NBodyWidget::bodiesCount() const
+{
+    return nbody->bodiesCount();
+}
+
+bool NBodyWidget::setBodies(size_t offset, const QVector<qreal> &masses, const QVector<QVector3D> &positions, const QVector<QVector3D> &velocities)
 {
     if(!nbody->isReady()) return false;
     if(nbody->isRunning()) return false;
 
     bool has_glcontext = QGLContext::currentContext() != nullptr;
+
+    if(!has_glcontext) makeCurrent();
 
     bool res = nbody->setMasses(masses, offset) &&
                nbody->setPositions(positions, offset) &&
@@ -91,6 +98,62 @@ bool NBodyWidget::setBodies(size_t offset, const QVector<float> &masses, const Q
     if(!has_glcontext) doneCurrent();
 
     update();
+
+    return res;
+}
+
+bool NBodyWidget::setBodies(size_t offset, const QVector<float> &masses, const QVector<Point3f> &positions, const QVector<Point3f> &velocities)
+{
+    if(!nbody->isReady()) return false;
+    if(nbody->isRunning()) return false;
+
+    bool has_glcontext = QGLContext::currentContext() != nullptr;
+
+    if(!has_glcontext) makeCurrent();
+
+    bool res = nbody->setMasses(masses, offset) &&
+               nbody->setPositions(positions, offset) &&
+               nbody->setVelocities(velocities, offset);
+
+    if(!has_glcontext) doneCurrent();
+
+    update();
+
+    return res;
+}
+
+bool NBodyWidget::getBodies(size_t offset, size_t count, QVector<qreal> &masses, QVector<QVector3D> &positions, QVector<QVector3D> &velocities)
+{
+    if(!nbody->isReady()) return false;
+    if(nbody->isRunning()) return false;
+
+    bool has_glcontext = QGLContext::currentContext() != nullptr;
+
+    if(!has_glcontext) makeCurrent();
+
+    bool res = nbody->getMasses(masses, offset, count) &&
+               nbody->getPositions(positions, offset, count) &&
+               nbody->getVelocities(velocities, offset, count);
+
+    if(!has_glcontext) doneCurrent();
+
+    return res;
+}
+
+bool NBodyWidget::getBodies(size_t offset, size_t count, QVector<float> &masses, QVector<Point3f> &positions, QVector<Point3f> &velocities)
+{
+    if(!nbody->isReady()) return false;
+    if(nbody->isRunning()) return false;
+
+    bool has_glcontext = QGLContext::currentContext() != nullptr;
+
+    if(!has_glcontext) makeCurrent();
+
+    bool res = nbody->getMasses(masses, offset, count) &&
+               nbody->getPositions(positions, offset, count) &&
+               nbody->getVelocities(velocities, offset, count);
+
+    if(!has_glcontext) doneCurrent();
 
     return res;
 }
@@ -109,6 +172,8 @@ bool NBodyWidget::recreateNBody()
     bool has_glcontext = QGLContext::currentContext() != nullptr;
 
     if(!has_glcontext) makeCurrent();
+
+    nbody->setTimeStep(Settings::get().timeStep());
 
     try{
         CLPlatform platform = CLPlatform::byName(Settings::get().clPlatformName());
@@ -239,7 +304,7 @@ void NBodyWidget::paintGL()
 
     glDepthMask(GL_TRUE);
 
-    if(sim_run) nbody->simulate(5e5);//1e-3);
+    if(sim_run) nbody->simulate();//1e-3);
 }
 
 void NBodyWidget::mouseMoveEvent(QMouseEvent *event)

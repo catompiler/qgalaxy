@@ -15,5 +15,6 @@
         <file>galaxys.png</file>
         <file>filesave.png</file>
         <file>fileopen.png</file>
+        <file>edit.png</file>
     </qresource>
 </RCC>
