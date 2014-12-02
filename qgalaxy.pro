@@ -68,3 +68,6 @@ FORMS    += mainwindow.ui \
 
 RESOURCES += \
     res.qrc
+
+OTHER_FILES += \
+    nbody.cl

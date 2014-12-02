@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>590</width>
-    <height>530</height>
+    <width>588</width>
+    <height>528</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -28,7 +28,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>590</width>
+     <width>588</width>
      <height>22</height>
     </rect>
    </property>
@@ -36,6 +36,9 @@
     <property name="title">
      <string>&amp;Файл</string>
     </property>
+    <addaction name="actOpen"/>
+    <addaction name="actSave"/>
+    <addaction name="separator"/>
     <addaction name="actExit"/>
    </widget>
    <widget class="QMenu" name="mnuSettings">
@@ -230,6 +233,30 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actOpen">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/images/fileopen.png</normaloff>:/images/fileopen.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Открыть</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actSave">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/images/filesave.png</normaloff>:/images/filesave.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Сохранить</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
  </widget>

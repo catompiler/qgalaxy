@@ -57,7 +57,12 @@ bool CLCommandQueue::retain()
 
 bool CLCommandQueue::release()
 {
+    cl_uint refs_count = 0;
+    try{ refs_count = getInfoValue<cl_uint>(CL_QUEUE_REFERENCE_COUNT); }catch(...){}
+
     CL_ERR_THROW(clReleaseCommandQueue(m_id));
+
+    if(refs_count == 1) m_id = nullptr;
     return true;
 }
 

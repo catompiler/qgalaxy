@@ -151,6 +151,8 @@ void MainWindow::on_actSettingsOCL_triggered()
 void MainWindow::on_actSimStart_triggered()
 {
     nbodyWidget->setSimulationRunning(true);
+    //nbodyWidget->setParent(nullptr);
+    //nbodyWidget->showFullScreen();
 }
 
 void MainWindow::on_actSimStop_triggered()
@@ -164,9 +166,9 @@ void MainWindow::on_actGenSGalaxy_triggered()
 
     galaxy.setStarsCount(Settings::get().bodiesCount());
     galaxy.setRadius(2000.0);
-    galaxy.setMinStarMass(1e-1);
-    galaxy.setMaxStarMass(2e-1);
-    galaxy.setBlackHoleMass(8e5);//8e5
+    galaxy.setMinStarMass(5e-1);
+    galaxy.setMaxStarMass(2e0);
+    galaxy.setBlackHoleMass(1e6);//8e5
 
     if(galaxy.generate()){
         nbodyWidget->setBodies(0, galaxy.starsMasses(), galaxy.starsPositons(), galaxy.starsVelosities());
@@ -182,21 +184,21 @@ void MainWindow::on_actGenGalaxyCollision_triggered()
 
     galaxy1.setStarsCount(g1_count);
     galaxy1.setRadius(1000);
-    galaxy1.setMinStarMass(1e-1);
-    galaxy1.setMaxStarMass(2e-1);
-    galaxy1.setBlackHoleMass(8e5);
+    galaxy1.setMinStarMass(5e-1);
+    galaxy1.setMaxStarMass(2e0);
+    galaxy1.setBlackHoleMass(1e6);
     galaxy1.setPosition(QVector3D(-1500.0, 100.0, 0.0));
     galaxy1.setOrientation(QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, -45));
-    galaxy1.setVelocity(QVector3D(-1000.0, 1500.0, 0.0));
+    galaxy1.setVelocity(QVector3D(0.0e-6, 1.5e-6, 0.0));
 
     galaxy2.setStarsCount(Settings::get().bodiesCount() - g1_count);
     galaxy2.setRadius(1000);
-    galaxy2.setMinStarMass(1e-1);
-    galaxy2.setMaxStarMass(2e-1);
-    galaxy2.setBlackHoleMass(8e5);
+    galaxy2.setMinStarMass(5e-1);
+    galaxy2.setMaxStarMass(1e0);
+    galaxy2.setBlackHoleMass(1e6);
     galaxy2.setPosition(QVector3D(1500.0, -100.0, 0.0));
     galaxy2.setOrientation(QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, 45));
-    galaxy2.setVelocity(QVector3D(1000.0, -1500.0, 0.0));
+    galaxy2.setVelocity(QVector3D(0.0e-6, -1.5e-6, 0.0));
 
     if(galaxy1.generate() && galaxy2.generate()){
         nbodyWidget->setBodies(0,        galaxy1.starsMasses(), galaxy1.starsPositons(), galaxy1.starsVelosities());

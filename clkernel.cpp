@@ -64,7 +64,12 @@ bool CLKernel::retain()
 
 bool CLKernel::release()
 {
+    cl_uint refs_count = 0;
+    try{ refs_count = getInfoValue<cl_uint>(CL_KERNEL_REFERENCE_COUNT); }catch(...){}
+
     CL_ERR_THROW(clReleaseKernel(m_id));
+
+    if(refs_count == 1) m_id = nullptr;
     return true;
 }
 

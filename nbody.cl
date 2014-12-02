@@ -9,15 +9,23 @@ __kernel void kernel_main(unsigned int count,
     unsigned int i;
     unsigned int pos_i;
     
-    float4 position, velocity;
-    float4 accel;
+    float3 position, velocity;
+    float3 accel;
     float m;
     
-    float4 pos, vel;
-    float4 vec_dr;
+    float3 pos;
+    float3 vec_dr;
     float r;
     
-    const float G = 6.6354E4f;/*6.673*/
+    /*
+    G, LY^3 / (Msun * Year^2)
+    */
+    const float G = 1.57e-13; //66462.65;
+    /*
+     G * Year in seconds ^ 2
+    */
+    //const float G = 66462.65;//66354.0f;//6.6354E4f;/*6.673*/
+    //const float G = 66354.0f;//6.6354E4f;/*6.673*/
     
     /*get_global_id(2) * get_global_size(1) * get_global_size(0) + */
     id = get_global_id(1) * get_global_size(0) + get_global_id(0);
@@ -26,14 +34,14 @@ __kernel void kernel_main(unsigned int count,
     
     if(id >= count) return;
     
-    position = (float4)(positions_in[pos_id], positions_in[pos_id + 1], positions_in[pos_id + 2], 0.0f);
-    velocity = (float4)(velocities_in[pos_id], velocities_in[pos_id + 1], velocities_in[pos_id + 2], 0.0f);
+    position = (float3)(positions_in[pos_id], positions_in[pos_id + 1], positions_in[pos_id + 2]);
+    velocity = (float3)(velocities_in[pos_id], velocities_in[pos_id + 1], velocities_in[pos_id + 2]);
     
-    accel = (float4)(0.0f, 0.0f, 0.0f, 0.0f);
+    accel = (float3)(0.0f, 0.0f, 0.0f);
     for(i = 0; i < count; i++){
         if(i == id)    continue;
         /*if(i != id)*/    pos_i = i + i + i;
-        /*if(i != id)*/    pos = (float4)(positions_in[pos_i], positions_in[pos_i + 1], positions_in[pos_i + 2], 0.0f);
+        /*if(i != id)*/    pos = (float3)(positions_in[pos_i], positions_in[pos_i + 1], positions_in[pos_i + 2]);
         /*if(i != id)*/    m = masses[i];
         vec_dr = pos - position;
         r = length(vec_dr);
@@ -42,9 +50,8 @@ __kernel void kernel_main(unsigned int count,
         accel += vec_dr * m / ( r * r );
     }
     accel *=  G;
-    vel = accel * dt;
-    position += (velocity + vel) * dt;
-    velocity += vel;
+    velocity += accel * dt;
+    position += velocity * dt;
     
     velocities_out[pos_id    ] = velocity.x;
     velocities_out[pos_id + 1] = velocity.y;

@@ -59,7 +59,12 @@ bool CLEvent::retain()
 
 bool CLEvent::release()
 {
+    cl_uint refs_count = 0;
+    try{ refs_count = getInfoValue<cl_uint>(CL_EVENT_REFERENCE_COUNT); }catch(...){}
+
     CL_ERR_THROW(clReleaseEvent(m_id));
+
+    if(refs_count == 1) m_id = nullptr;
     return true;
 }
 

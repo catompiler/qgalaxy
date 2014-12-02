@@ -70,7 +70,12 @@ bool CLBuffer::retain()
 
 bool CLBuffer::release()
 {
+    cl_uint refs_count = 0;
+    try{ refs_count = getInfoValue<cl_uint>(CL_MEM_REFERENCE_COUNT); }catch(...){}
+
     CL_ERR_THROW(clReleaseMemObject(m_id));
+
+    if(refs_count == 1) m_id = nullptr;
     return true;
 }
 

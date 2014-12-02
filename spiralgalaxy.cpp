@@ -4,8 +4,15 @@
 #include <math.h>
 //#include <QDebug>
 
-
-const qreal SpiralGalaxy::G = 6.6354E4;
+/*
+ G, LY^3 / (Msun * Year^2)
+*/
+const qreal SpiralGalaxy::G = 1.57e-13; //66462.65;
+/*
+ G * Year in seconds ^ 2
+*/
+//const qreal SpiralGalaxy::G = 66462.65;
+//const qreal SpiralGalaxy::G = 66354.0;
 const qreal SpiralGalaxy::depth_div_radius = 0.1;
 const qreal SpiralGalaxy::min_radius_k = 0.015;
 
@@ -84,8 +91,8 @@ bool SpiralGalaxy::generate()
         // Масса.
         (*m_stars_masses)[i] = lerp(m_star_mass_min, m_star_mass_max, getRanduf());
         // Расстояние до центрального тела.
-        //r_a = min_radius + (/**/1.0 - sqrt/**/(getRanduf())) * avail_dradius;
-        r_a = min_radius + getRanduf() * avail_dradius;
+        r_a = min_radius + (/**/1.0 - sqrt/**/(getRanduf())) * avail_dradius;
+        //r_a = min_radius + getRanduf() * avail_dradius;
 
         // Высота в апогее над диском.
         max_h = depth_div_radius * m_radius * pow(1.0 - r_a/m_radius, 2);
@@ -154,7 +161,7 @@ bool SpiralGalaxy::generate()
         //qDebug() << "r_a =" << r_a;
 
         //mass_stars_in_radius = average_mass * (stars_count - 1) * pow(r / _radius, 2.0);
-        mass_stars_in_radius = average_mass * other_stars_count * r_a / m_radius;
+        mass_stars_in_radius = average_mass * other_stars_count * (1.0 - sqrt(r_a / m_radius));
         sum_mass = mass_stars_in_radius + m_black_hole_mass;
 
         //v = sqrt(G * sum_mass / r_a * (1.0 - ellipse_eccentricity));

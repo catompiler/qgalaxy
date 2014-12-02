@@ -13,5 +13,7 @@
         <file>star.png</file>
         <file>galaxy.png</file>
         <file>galaxys.png</file>
+        <file>filesave.png</file>
+        <file>fileopen.png</file>
     </qresource>
 </RCC>

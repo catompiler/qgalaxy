@@ -239,7 +239,7 @@ void NBodyWidget::paintGL()
 
     glDepthMask(GL_TRUE);
 
-    if(sim_run) nbody->simulate(1e-3);
+    if(sim_run) nbody->simulate(5e5);//1e-3);
 }
 
 void NBodyWidget::mouseMoveEvent(QMouseEvent *event)

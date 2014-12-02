@@ -64,7 +64,12 @@ bool CLProgram::retain()
 
 bool CLProgram::release()
 {
+    cl_uint refs_count = 0;
+    try{ refs_count = getInfoValue<cl_uint>(CL_PROGRAM_REFERENCE_COUNT); }catch(...){}
+
     CL_ERR_THROW(clReleaseProgram(m_id));
+
+    if(refs_count == 1) m_id = nullptr;
     return true;
 }
 
