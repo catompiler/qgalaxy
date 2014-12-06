@@ -40,6 +40,7 @@ NBody::NBody(QObject *parent) :
     QObject(parent)
 {
     bodies_count = 0;
+    simulated_bodies_count = 0;
 
     time_step = 0.0f;
 
@@ -59,9 +60,11 @@ NBody::NBody(QObject *parent) :
     }
 
     global_dims[0] = 0;
-    global_dims[1] = 0;
     local_dims[0] = 0;
+#if NDRANGE_DIMENSIONS > 1
+    global_dims[1] = 0;
     local_dims[1] = 0;
+#endif
 
     clcxt = new CLContext();
     clqueue = new CLCommandQueue();
@@ -96,6 +99,18 @@ size_t NBody::bodiesCount() const
     return bodies_count;
 }
 
+size_t NBody::simulatedBodiesCount() const
+{
+    return simulated_bodies_count;
+}
+
+bool NBody::setSimulatedBodiesCount(size_t count)
+{
+    if(count > bodies_count) return false;
+    simulated_bodies_count = count;
+    return true;
+}
+
 float NBody::timeStep() const
 {
     return time_step;
@@ -128,6 +143,7 @@ bool NBody::create(const CLPlatform& platform, const CLDevice& device, size_t bo
     if(is_ready) destroy();
 
     bodies_count = bodies;
+    simulated_bodies_count = bodies;
 
     if(!createGLBuffers()){
         log(Log::ERROR, LOG_WHO, tr("Error creating OpenGL buffers!"));
@@ -162,6 +178,24 @@ bool NBody::destroy()
     return true;
 }
 
+bool NBody::reset()
+{
+    if(!isReady() || isRunning()) return false;
+
+    simulated_bodies_count = bodies_count;
+
+    QVector<float> data(bodies_count * 3);
+
+    if(!setGLBufferData(gl_index_buf, data)) return false;
+    if(!setGLBufferData(gl_mass_buf, data)) return false;
+    for(size_t i = 0; i < switch_buffers_count; i ++){
+        if(!setGLBufferData(gl_pos_buf[i], data)) return false;
+        if(!setGLBufferData(gl_vel_buf[i], data)) return false;
+    }
+
+    return true;
+}
+
 bool NBody::isReady() const
 {
     return is_ready;
@@ -180,63 +214,87 @@ bool NBody::isRunning() const
     return res;
 }
 
+bool NBody::wait() const
+{
+    if(!isReady() || !isRunning()) return false;
+
+    try{
+        return clevent->wait();
+    }catch(CLException& e){
+        log(Log::WARNING, LOG_WHO, e.what());
+    }
+    return false;
+}
+
 bool NBody::setMasses(const QVector<qreal> &data, size_t offset)
 {
+    if(!isReady() || isRunning()) return false;
     return setGLBufferData(gl_mass_buf, data, offset);
 }
 
 bool NBody::setMasses(const QVector<float> &data, size_t offset)
 {
+    if(!isReady() || isRunning()) return false;
     return setGLBufferData(gl_mass_buf, data, offset);
 }
 
 bool NBody::setPositions(const QVector<QVector3D> &data, size_t offset)
 {
+    if(!isReady() || isRunning()) return false;
     return setGLBufferData(gl_pos_buf[current_in], data, offset);
 }
 
 bool NBody::setPositions(const QVector<Point3f> &data, size_t offset)
 {
+    if(!isReady() || isRunning()) return false;
     return setGLBufferData(gl_pos_buf[current_in], data, offset);
 }
 
 bool NBody::setVelocities(const QVector<QVector3D> &data, size_t offset)
 {
+    if(!isReady() || isRunning()) return false;
     return setGLBufferData(gl_vel_buf[current_in], data, offset);
 }
 
 bool NBody::setVelocities(const QVector<Point3f> &data, size_t offset)
 {
+    if(!isReady() || isRunning()) return false;
     return setGLBufferData(gl_vel_buf[current_in], data, offset);
 }
 
 bool NBody::getMasses(QVector<qreal> &data, size_t offset, size_t count) const
 {
+    if(!isReady() || isRunning()) return false;
     return getGLBufferData(gl_mass_buf, data, offset, count);
 }
 
 bool NBody::getMasses(QVector<float> &data, size_t offset, size_t count) const
 {
+    if(!isReady() || isRunning()) return false;
     return getGLBufferData(gl_mass_buf, data, offset, count);
 }
 
 bool NBody::getPositions(QVector<QVector3D> &data, size_t offset, size_t count) const
 {
+    if(!isReady() || isRunning()) return false;
     return getGLBufferData(gl_pos_buf[current_in], data, offset, count);
 }
 
 bool NBody::getPositions(QVector<Point3f> &data, size_t offset, size_t count) const
 {
+    if(!isReady() || isRunning()) return false;
     return getGLBufferData(gl_pos_buf[current_in], data, offset, count);
 }
 
 bool NBody::getVelocities(QVector<QVector3D> &data, size_t offset, size_t count) const
 {
+    if(!isReady() || isRunning()) return false;
     return getGLBufferData(gl_vel_buf[current_in], data, offset, count);
 }
 
 bool NBody::getVelocities(QVector<Point3f> &data, size_t offset, size_t count) const
 {
+    if(!isReady() || isRunning()) return false;
     return getGLBufferData(gl_vel_buf[current_in], data, offset, count);
 }
 
@@ -267,7 +325,7 @@ bool NBody::simulate()
 
 bool NBody::simulate(float dt)
 {
-    if(!is_ready) return false;
+    if(!isReady() || isRunning()) return false;
 
     bool res = true;
 
@@ -289,8 +347,9 @@ bool NBody::simulate(float dt)
         clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_POSITIONS_OUT, cl_pos_buf[current_out]->id());
         clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_VELOCITIES_IN,  cl_vel_buf[current_in ]->id());
         clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_VELOCITIES_OUT, cl_vel_buf[current_out]->id());
+        clkernel->setArg<unsigned int>(KERNEL_MAIN_ARG_COUNT, simulated_bodies_count);//bodies_count
 
-        clkernel->execute(*clqueue, 2, global_dims, local_dims);
+        clkernel->execute(*clqueue, NDRANGE_DIMENSIONS, global_dims, local_dims);
 
     }catch(CLException& e){
         log(Log::ERROR, LOG_WHO, e.what());
@@ -375,7 +434,7 @@ bool NBody::termOpenCL()
     return true;
 }
 
-bool NBody::calculateDimsSizes()
+/*bool NBody::calculateDimsSizes()
 {
     try{
         CLDevice device = clcxt->devices().first();
@@ -387,6 +446,11 @@ bool NBody::calculateDimsSizes()
 
         size_t dev_work_grp_size = device.maxWorkGroupSize();
         size_t knl_work_grp_size = clkernel->workGroupSize(device);
+        size_t dev_compute_units = device.maxComputeUnits();
+
+        log(Log::INFO, LOG_WHO, tr("Device max compute units: %1").arg(dev_compute_units));
+        log(Log::INFO, LOG_WHO, tr("Device max work group size: %1").arg(dev_work_grp_size));
+        log(Log::INFO, LOG_WHO, tr("Kernel max work group size: %1").arg(knl_work_grp_size));
 
         size_t local_work_size =
                 static_cast<size_t>(pow(2.0,
@@ -423,6 +487,62 @@ bool NBody::calculateDimsSizes()
         }
         log(Log::INFO, LOG_WHO, tr("Using local work size %1x%1").arg(local_dims[0]));
         log(Log::INFO, LOG_WHO, tr("Using global work size %1x%2").arg(global_dims[0]).arg(global_dims[1]));
+
+    }catch(CLException& e){
+        log(Log::ERROR, LOG_WHO, e.what());
+        return false;
+    }
+
+    return true;
+}*/
+
+bool NBody::calculateDimsSizes()
+{
+    try{
+        CLDevice device = clcxt->devices().first();
+
+#if NDRANGE_DIMENSIONS > 1
+        if(device.maxWorkItemDimensions() < 2){
+            log(Log::ERROR, LOG_WHO, tr("Two or more dimensions is not supported"));
+            return false;
+        }
+#endif
+
+        size_t dev_work_grp_size = device.maxWorkGroupSize();
+        size_t knl_work_grp_size = clkernel->workGroupSize(device);
+        size_t dev_compute_units = device.maxComputeUnits();
+
+        log(Log::INFO, LOG_WHO, tr("Device max compute units: %1").arg(dev_compute_units));
+        log(Log::INFO, LOG_WHO, tr("Device max work group size: %1").arg(dev_work_grp_size));
+        log(Log::INFO, LOG_WHO, tr("Kernel max work group size: %1").arg(knl_work_grp_size));
+
+        size_t local_work_size = std::min(dev_work_grp_size,
+                                          knl_work_grp_size);
+
+        local_dims[0] = local_work_size;
+#if NDRANGE_DIMENSIONS > 1
+        local_dims[1] = 1;
+#endif
+
+        global_dims[0] = static_cast<size_t>(ceil(static_cast<float>(bodies_count) / local_work_size)) * local_work_size;
+#if NDRANGE_DIMENSIONS > 1
+        global_dims[1] = 1;
+#endif
+
+        log(Log::INFO, LOG_WHO, tr("Recommended maximum number of stars: %1").arg(local_work_size * dev_compute_units));
+
+        log(Log::INFO, LOG_WHO, tr("Using local work size %1x%2").arg(local_dims[0])
+#if NDRANGE_DIMENSIONS > 1
+                .arg(local_dims[1]));
+#else
+                .arg(1));
+#endif
+        log(Log::INFO, LOG_WHO, tr("Using global work size %1x%2").arg(global_dims[0])
+#if NDRANGE_DIMENSIONS > 1
+                .arg(global_dims[1]));
+#else
+                .arg(1));
+#endif
 
     }catch(CLException& e){
         log(Log::ERROR, LOG_WHO, e.what());
@@ -475,7 +595,6 @@ bool NBody::createCLProgram()
 
     try{
         clkernel->create(*clprogram, clprogram_kernel_name);
-        clkernel->setArg<unsigned int>(KERNEL_MAIN_ARG_COUNT, bodies_count);
         clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_MASSES, cl_mass_buf->id());
     }catch(CLException& e){
         log(Log::ERROR, LOG_WHO, e.what());
@@ -639,7 +758,7 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<qreal> &data, size_t o
 bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<float> &data, size_t offset)
 {
     if(!buf->isCreated()) return false;
-    if((offset + static_cast<size_t>(data.size())) * 3 > static_cast<size_t>(buf->size())) return false;
+    if((offset + static_cast<size_t>(data.size())) > static_cast<size_t>(buf->size())) return false;
 
     if(!buf->bind()) return false;
     buf->write(offset * sizeof(float), data.data(), data.size() * sizeof(float));
@@ -707,7 +826,7 @@ bool NBody::getGLBufferData(QGLBuffer *buf, QVector<qreal> &data, size_t offset,
 bool NBody::getGLBufferData(QGLBuffer *buf, QVector<float> &data, size_t offset, size_t count) const
 {
     if(!buf->isCreated()) return false;
-    if((offset + count) * 3 > static_cast<size_t>(buf->size())) return false;
+    if((offset + count) > static_cast<size_t>(buf->size())) return false;
 
     if(!buf->bind()) return false;
     data.resize(data.size() + count);

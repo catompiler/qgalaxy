@@ -41,7 +41,8 @@ SOURCES += main.cpp\
     galaxy.cpp \
     spiralgalaxy.cpp \
     point3f.cpp \
-    editbodydialog.cpp
+    editbodydialog.cpp \
+    utils.cpp
 
 HEADERS  += mainwindow.h \
     log.h \

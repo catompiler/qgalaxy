@@ -20,17 +20,10 @@ __kernel void kernel_main(unsigned int count,
     /*
     G, LY^3 / (Msun * Year^2)
     */
-    const float G = 1.57e-13; //66462.65;
-    /*
-     G * Year in seconds ^ 2
-    */
-    //const float G = 66462.65;//66354.0f;//6.6354E4f;/*6.673*/
-    //const float G = 66354.0f;//6.6354E4f;/*6.673*/
-    
-    /*get_global_id(2) * get_global_size(1) * get_global_size(0) + */
+    const float G = 1.57e-13;
+
     id = get_global_id(1) * get_global_size(0) + get_global_id(0);
-    pos_id = id + id + id;
-    i = 0;
+    pos_id = id * 3;
     
     if(id >= count) return;
     
@@ -38,17 +31,19 @@ __kernel void kernel_main(unsigned int count,
     velocity = (float3)(velocities_in[pos_id], velocities_in[pos_id + 1], velocities_in[pos_id + 2]);
     
     accel = (float3)(0.0f, 0.0f, 0.0f);
+
     for(i = 0; i < count; i++){
         if(i == id)    continue;
-        /*if(i != id)*/    pos_i = i + i + i;
-        /*if(i != id)*/    pos = (float3)(positions_in[pos_i], positions_in[pos_i + 1], positions_in[pos_i + 2]);
-        /*if(i != id)*/    m = masses[i];
+        pos_i = i * 3;
+        pos = (float3)(positions_in[pos_i], positions_in[pos_i + 1], positions_in[pos_i + 2]);
+        m = masses[i];
         vec_dr = pos - position;
         r = length(vec_dr);
         if(r < 0.00001f) r = 0.00001f;
-        vec_dr = normalize(vec_dr);
+        vec_dr = vec_dr / r;
         accel += vec_dr * m / ( r * r );
     }
+
     accel *=  G;
     velocity += accel * dt;
     position += velocity * dt;

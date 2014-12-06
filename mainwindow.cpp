@@ -6,7 +6,9 @@
 #include <QMessageBox>
 #include <QTextCursor>
 #include <QFile>
-#include <QDebug>
+#include <QDir>
+#include <QFileDialog>
+#include <QInputDialog>
 #include "clplatform.h"
 #include "cldevice.h"
 #include "log.h"
@@ -15,6 +17,7 @@
 #include "editbodydialog.h"
 #include "nbodywidget.h"
 #include "spiralgalaxy.h"
+#include <QDebug>
 
 
 
@@ -37,9 +40,18 @@ MainWindow::MainWindow(QWidget *parent) :
     nbodyWidget = new NBodyWidget(this);
     setCentralWidget(nbodyWidget);
 
+    connect(nbodyWidget, SIGNAL(nbodyInitialized()),
+            this, SLOT(nbodyWidget_onInitialized()));
+    connect(nbodyWidget, SIGNAL(simulationFinished()),
+            this, SLOT(nbodyWidget_onSimulated()));
+
     oclSettingsDlg = nullptr;
 
     editBodyDlg = nullptr;
+
+    cur_dir = QDir::currentPath();
+
+    simulated_years = 0.0;
 
     refreshUi();
 }
@@ -106,8 +118,40 @@ void MainWindow::addlog(Log::MsgType msg_type, const QString& who, const QString
     }
 }
 
+void MainWindow::nbodyWidget_onInitialized()
+{
+    refreshUi();
+}
+
+void MainWindow::nbodyWidget_onSimulated()
+{
+    simulated_years += nbodyWidget->timeStep();
+
+    QString units;
+    qreal years = simulated_years;
+
+    if(years >= 1e12){
+        years /= 1e12;
+        units = tr("трлн. лет.");
+    }else if(years >= 1e9){
+        years /= 1e9;
+        units = tr("млрд. лет.");
+    }else if(years >= 1e6){
+        years /= 1e6;
+        units = tr("млн. лет.");
+    }else if(years >= 1e3){
+        years /= 1e3;
+        units = tr("тыс. лет.");
+    }else{
+        units = tr("лет.");
+    }
+
+    statusBar()->showMessage(tr("%1 %2").arg(years, 0, 'f', 6).arg(units));
+}
+
 void MainWindow::on_actExit_triggered()
 {
+    nbodyWidget->setSimulationRunning(false);
     qApp->quit();
 }
 
@@ -152,18 +196,19 @@ void MainWindow::on_actSettingsOCL_triggered()
             //QMessageBox::critical(this, tr("Ошибка!"), e.what());
         }
     }
+    refreshUi();
 }
 
 void MainWindow::on_actSimStart_triggered()
 {
     nbodyWidget->setSimulationRunning(true);
-    //nbodyWidget->setParent(nullptr);
-    //nbodyWidget->showFullScreen();
+    refreshUi();
 }
 
 void MainWindow::on_actSimStop_triggered()
 {
     nbodyWidget->setSimulationRunning(false);
+    refreshUi();
 }
 
 void MainWindow::on_actGenSGalaxy_triggered()
@@ -172,44 +217,67 @@ void MainWindow::on_actGenSGalaxy_triggered()
 
     galaxy.setStarsCount(Settings::get().bodiesCount());
     galaxy.setRadius(2000.0);
-    galaxy.setMinStarMass(5e-1);
-    galaxy.setMaxStarMass(2e0);
-    galaxy.setBlackHoleMass(1e7);//8e5
+    galaxy.setMinStarMass(utils::getRandf(1e-1, 1e0));//5e-1
+    galaxy.setMaxStarMass(utils::getRandf(1e0, 1e1));//2e0
+    galaxy.setBlackHoleMass(utils::getRandf(1e6, 1e7));//1e7
 
-    if(galaxy.generate()){
-        nbodyWidget->setBodies(0, galaxy.starsMasses(), galaxy.starsPositons(), galaxy.starsVelosities());
+    if(!galaxy.generate() || !nbodyWidget->setBodies(0, galaxy.starsMasses(), galaxy.starsPositons(), galaxy.starsVelosities())){
+        log(Log::ERROR, LOG_WHO, tr("Ошибка генерации галактики!"));
+        return;
     }
+    nbodyWidget->setSimulatedBodiesCount(galaxy.starsCount());
+
+    resetSimData();
 }
 
 void MainWindow::on_actGenGalaxyCollision_triggered()
 {
-    SpiralGalaxy galaxy1;
-    SpiralGalaxy galaxy2;
+    static size_t galaxies_count = 0;
 
-    size_t g1_count = Settings::get().bodiesCount() / 2;
+    size_t all_stars_count = Settings::get().bodiesCount();
+    size_t max_galaxies = all_stars_count / 2;
 
-    galaxy1.setStarsCount(g1_count);
-    galaxy1.setRadius(1000);
-    galaxy1.setMinStarMass(5e-1);
-    galaxy1.setMaxStarMass(2e0);
-    galaxy1.setBlackHoleMass(1e7);
-    galaxy1.setPosition(QVector3D(-1500.0, 100.0, 0.0));
-    galaxy1.setOrientation(QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, -45));
-    galaxy1.setVelocity(QVector3D(-1.5e-6, 6.5e-6, 0.0));
+    bool ok = false;
+    galaxies_count = QInputDialog::getInt(this, tr("Выбор."), tr("Выберите число галактик:"), galaxies_count, 1, max_galaxies, 1, &ok);
 
-    galaxy2.setStarsCount(Settings::get().bodiesCount() - g1_count);
-    galaxy2.setRadius(1000);
-    galaxy2.setMinStarMass(5e-1);
-    galaxy2.setMaxStarMass(1e0);
-    galaxy2.setBlackHoleMass(1e7);
-    galaxy2.setPosition(QVector3D(1500.0, -100.0, 0.0));
-    galaxy2.setOrientation(QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, 45));
-    galaxy2.setVelocity(QVector3D(1.5e-6, -6.5e-6, 0.0));
+    if(!ok) return;
 
-    if(galaxy1.generate() && galaxy2.generate()){
-        nbodyWidget->setBodies(0,        galaxy1.starsMasses(), galaxy1.starsPositons(), galaxy1.starsVelosities());
-        nbodyWidget->setBodies(g1_count, galaxy2.starsMasses(), galaxy2.starsPositons(), galaxy2.starsVelosities());
+    SpiralGalaxy galaxy;
+
+    size_t stars_per_galaxy = all_stars_count / galaxies_count;
+
+    const qreal max_axis_pos = 1000.0 * galaxies_count;
+    const qreal max_axis_vel = 1e-5;
+
+    for(size_t i = 0; i < galaxies_count; i ++){
+        if(i == galaxies_count - 1){
+            galaxy.setStarsCount(all_stars_count - stars_per_galaxy * i);
+        }else{
+            galaxy.setStarsCount(stars_per_galaxy);
+        }
+        galaxy.setRadius(utils::getRandf(1000.0, 2000.0));
+        galaxy.setMinStarMass(utils::getRandf(1e-1, 1e0));//5e-1
+        galaxy.setMaxStarMass(utils::getRandf(1e0, 1e1));//2e0
+        galaxy.setBlackHoleMass(utils::getRandf(1e6, 1e7));//1e7
+        galaxy.setPosition(QVector3D(utils::getRandf(-max_axis_pos, max_axis_pos),
+                                     utils::getRandf(-max_axis_pos, max_axis_pos),
+                                     utils::getRandf(-max_axis_pos, max_axis_pos)));
+        galaxy.setVelocity(QVector3D(utils::getRandf(-max_axis_vel, max_axis_vel),
+                                     utils::getRandf(-max_axis_vel, max_axis_vel),
+                                     utils::getRandf(-max_axis_vel, max_axis_vel)));
+        galaxy.setOrientation(QQuaternion::fromAxisAndAngle(utils::getRandsf(),
+                                                            utils::getRandsf(),
+                                                            utils::getRandsf(),
+                                                            rand() % 360));
+
+        if(!galaxy.generate() || !nbodyWidget->setBodies(i * stars_per_galaxy, galaxy.starsMasses(), galaxy.starsPositons(), galaxy.starsVelosities())){
+            log(Log::ERROR, LOG_WHO, tr("Ошибка генерации галактики!"));
+            return;
+        }
     }
+    nbodyWidget->setSimulatedBodiesCount(all_stars_count);
+
+    resetSimData();
 }
 
 void MainWindow::on_actSimEdit_triggered()
@@ -220,6 +288,65 @@ void MainWindow::on_actSimEdit_triggered()
     editBodyDlg->exec();
 }
 
+void MainWindow::on_actSaveFile_triggered()
+{
+    QString filename = QFileDialog::getSaveFileName(this, tr("Сохранение файла"), cur_dir, tr("Galaxy files (*.glxy)"));
+
+    if(filename.isEmpty()) return;
+
+    cur_dir = QDir(filename).path();
+
+    if(!nbodyWidget->saveNBody(filename)){
+        log(Log::ERROR, LOG_WHO, tr("Ошибка сохранения файла!"));
+    }
+
+    resetSimData();
+}
+
+void MainWindow::on_actOpenFile_triggered()
+{
+    QString filename = QFileDialog::getOpenFileName(this, tr("Открытие файла"), cur_dir, tr("Galaxy files (*.glxy)"));
+
+    if(filename.isEmpty()) return;
+
+    cur_dir = QDir(filename).path();
+
+    if(!nbodyWidget->openNBody(filename)){
+        log(Log::ERROR, LOG_WHO, tr("Ошибка открытия файла!"));
+    }
+
+    resetSimData();
+}
+
+void MainWindow::on_actSimReset_triggered()
+{
+    nbodyWidget->reset();
+
+    resetSimData();
+}
+
 void MainWindow::refreshUi()
 {
+    bool is_ready = nbodyWidget->isReady();
+    bool is_running = nbodyWidget->isSimulationRunning();
+    bool is_not_running = is_ready && !is_running;
+
+    ui->actSettingsOCL->setEnabled(!is_running);
+
+    ui->actSimEdit->setEnabled(is_not_running);
+    ui->actSimReset->setEnabled(is_not_running);
+    ui->actSimStart->setEnabled(is_not_running);
+    ui->actSimStop->setEnabled(is_running);
+
+    ui->actGenSGalaxy->setEnabled(is_not_running);
+    ui->actGenGalaxyCollision->setEnabled(is_not_running);
+
+    ui->actOpenFile->setEnabled(is_not_running);
+    ui->actSaveFile->setEnabled(is_not_running);
+}
+
+void MainWindow::resetSimData()
+{
+    simulated_years = 0.0;
+    statusBar()->clearMessage();
 }

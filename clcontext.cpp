@@ -76,10 +76,10 @@ bool CLContext::create(const CLPlatform &platform, const CLDeviceList &devices,
             #endif
 
             #ifdef Q_WS_WIN
-            properties.push_back(CL_GL_CONTEXT_KHR);
-            properties.push_back(reinterpret_cast<cl_context_properties>(wglGetCurrentContext()));
-            properties.push_back(CL_WGL_HDC_KHR);
-            properties.push_back(reinterpret_cast<cl_context_properties>(wglGetCurrentDC()));
+            properties_vec.push_back(CL_GL_CONTEXT_KHR);
+            properties_vec.push_back(reinterpret_cast<cl_context_properties>(wglGetCurrentContext()));
+            properties_vec.push_back(CL_WGL_HDC_KHR);
+            properties_vec.push_back(reinterpret_cast<cl_context_properties>(wglGetCurrentDC()));
             #endif
     }
 

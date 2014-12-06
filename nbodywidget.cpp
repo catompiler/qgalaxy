@@ -10,10 +10,14 @@
 #include <QWheelEvent>
 #include <GL/glu.h>
 #include <QMatrix4x4>
-
+#include <QFile>
+#include <QDataStream>
 
 
 #define LOG_WHO "NBody View"
+
+
+#define VIEW_DISTANCE_DEFAULT 5000.0f
 
 
 NBodyWidget::NBodyWidget(QWidget *parent) :
@@ -51,18 +55,17 @@ NBodyWidget::NBodyWidget(QWidget *parent) :
     setMouseTracking(true);
 
     nbody = new NBody(this);
-    connect(nbody, SIGNAL(simulationFinished()), this, SLOT(simulationFinished()));
+    connect(nbody, SIGNAL(simulationFinished()), this, SLOT(on_simulationFinished()));
+    connect(nbody, SIGNAL(simulationFinished()), this, SIGNAL(simulationFinished()));
 
     sim_run = false;
 
     has_point_sprite = false;
     sprite_texture = 0;
 
-    view_distance = 5000.0f;
-    rot_x = 0.0f;
-    rot_y = 0.0f;
-    old_rot_x = 0.0f;
-    old_rot_y = 0.0f;
+    view_position = VIEW_DISTANCE_DEFAULT;
+    old_event_x = 0.0f;
+    old_event_y = 0.0f;
 }
 
 NBodyWidget::~NBodyWidget()
@@ -80,6 +83,172 @@ NBodyWidget::~NBodyWidget()
 size_t NBodyWidget::bodiesCount() const
 {
     return nbody->bodiesCount();
+}
+
+size_t NBodyWidget::simulatedBodiesCount() const
+{
+    return nbody->simulatedBodiesCount();
+}
+
+bool NBodyWidget::setSimulatedBodiesCount(size_t count)
+{
+    return nbody->setSimulatedBodiesCount(count);
+}
+
+bool NBodyWidget::reset()
+{
+    view_position = VIEW_DISTANCE_DEFAULT;
+    view_rotation = QQuaternion();
+    bool res = nbody->reset();
+    update();
+    return res;
+}
+
+bool NBodyWidget::isReady() const
+{
+    return nbody->isReady();
+}
+
+bool NBodyWidget::isRunning() const
+{
+    return nbody->isRunning();
+}
+
+bool NBodyWidget::isSimulationRunning() const
+{
+    return sim_run;
+}
+
+float NBodyWidget::timeStep() const
+{
+    return nbody->timeStep();
+}
+
+void NBodyWidget::setTimeStep(float dt)
+{
+    nbody->setTimeStep(dt);
+}
+
+bool NBodyWidget::saveNBody(const QString &filename)
+{
+    if(!nbody->isReady()) return false;
+    if(nbody->isRunning()) return false;
+
+    log(Log::INFO, LOG_WHO, tr("Saving file: %1").arg(filename));
+
+    QFile file(filename);
+    if(!file.open(QIODevice::WriteOnly)){
+        log(Log::ERROR, LOG_WHO, tr("Error open file!"));
+        return false;
+    }
+
+    size_t count = nbody->simulatedBodiesCount();
+
+    QVector<float> mass;
+    QVector<Point3f> pos, vel;
+
+    if(!getBodies(0, count, mass, pos, vel)){
+        log(Log::WARNING, LOG_WHO, tr("Error getting bodies!"));
+        file.close();
+        return false;
+    }
+
+    QDataStream ds(&file);
+    ds.setVersion(QDataStream::Qt_4_8);
+
+    ds << data_file_magic << data_file_version << static_cast<unsigned int>(count);
+
+    if(ds.writeRawData(reinterpret_cast<char*>(mass.data()), mass.size() * sizeof(float)) == -1 ||
+       ds.writeRawData(reinterpret_cast<char*>(pos.data()), pos.size() * sizeof(Point3f)) == -1 ||
+       ds.writeRawData(reinterpret_cast<char*>(vel.data()), vel.size() * sizeof(Point3f)) == -1){
+
+        log(Log::WARNING, LOG_WHO, tr("Error writing data!"));
+        file.close();
+        return false;
+    }
+
+    file.close();
+
+    log(Log::INFO, LOG_WHO, tr("File saved!"));
+
+    return true;
+}
+
+bool NBodyWidget::openNBody(const QString &filename)
+{
+    if(!nbody->isReady()) return false;
+    if(nbody->isRunning()) return false;
+
+    log(Log::INFO, LOG_WHO, tr("Opening file: %1").arg(filename));
+
+    QFile file(filename);
+    if(!file.open(QIODevice::ReadOnly)){
+        log(Log::ERROR, LOG_WHO, tr("Error open file!"));
+        return false;
+    }
+
+    QVector<float> mass;
+    QVector<Point3f> pos, vel;
+
+    quint32 magic, version;
+    unsigned int count;
+
+    QDataStream ds(&file);
+    ds.setVersion(QDataStream::Qt_4_8);
+
+    ds >> magic;
+
+    if(magic != data_file_magic){
+        log(Log::ERROR, LOG_WHO, tr("Invalid file magic!"));
+        file.close();
+        return false;
+    }
+
+    ds >> version;
+
+    if(version != data_file_version){
+        log(Log::ERROR, LOG_WHO, tr("Invalid file version!"));
+        file.close();
+        return false;
+    }
+
+    ds >> count;
+
+    if(nbody->bodiesCount() < count){
+        log(Log::ERROR, LOG_WHO, tr("Insufficient number of bodies. Required: %1.").arg(count));
+        file.close();
+        return false;
+    }
+
+    log(Log::INFO, LOG_WHO, tr("Bodies in file: %1").arg(count));
+
+    mass.resize(count);
+    pos.resize(count);
+    vel.resize(count);
+
+    if(ds.readRawData(reinterpret_cast<char*>(mass.data()), mass.size() * sizeof(float)) == -1 ||
+       ds.readRawData(reinterpret_cast<char*>(pos.data()), pos.size() * sizeof(Point3f)) == -1 ||
+       ds.readRawData(reinterpret_cast<char*>(vel.data()), vel.size() * sizeof(Point3f)) == -1){
+
+        log(Log::WARNING, LOG_WHO, tr("Error reading data!"));
+        file.close();
+        return false;
+    }
+
+    file.close();
+
+    if(!setBodies(0, mass, pos, vel)){
+        log(Log::WARNING, LOG_WHO, tr("Error setting bodies!"));
+        return false;
+    }
+
+    nbody->setSimulatedBodiesCount(count);
+
+    update();
+
+    log(Log::INFO, LOG_WHO, tr("File opened!"));
+
+    return true;
 }
 
 bool NBodyWidget::setBodies(size_t offset, const QVector<qreal> &masses, const QVector<QVector3D> &positions, const QVector<QVector3D> &velocities)
@@ -160,8 +329,24 @@ bool NBodyWidget::getBodies(size_t offset, size_t count, QVector<float> &masses,
 
 void NBodyWidget::setSimulationRunning(bool running)
 {
-    sim_run = running;
-    if(running) update();
+    if(running){
+        startSimulation();
+    }else{
+        stopSimulation();
+    }
+}
+
+void NBodyWidget::startSimulation()
+{
+    if(sim_run == false){
+        sim_run = nbody->simulate();
+    }
+}
+
+void NBodyWidget::stopSimulation()
+{
+    sim_run = false;
+    nbody->wait();
 }
 
 bool NBodyWidget::recreateNBody()
@@ -193,10 +378,12 @@ bool NBodyWidget::recreateNBody()
 
     update();
 
+    emit nbodyInitialized();
+
     return res;
 }
 
-void NBodyWidget::simulationFinished()
+void NBodyWidget::on_simulationFinished()
 {
     update();
 }
@@ -246,7 +433,7 @@ void NBodyWidget::resizeGL(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, static_cast<float>(width)/height, 1, 100000);
+    gluPerspective(45, static_cast<float>(width)/height, 1.0, 1e8);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -259,7 +446,8 @@ void NBodyWidget::paintGL()
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0.0f, 0.0f, view_distance,
+
+    gluLookAt(0.0f, 0.0f, view_position,
               0.0f, 0.0f, 0.0f,
               0.0f, 1.0f, 0.0f);
 
@@ -268,17 +456,13 @@ void NBodyWidget::paintGL()
     if(has_point_sprite){
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, sprite_texture);
+        glEnable(GL_TEXTURE_2D);
         glEnable(GL_POINT_SPRITE);
     }
 
-    glPushMatrix();
-    //glTranslatef(0.0, 0.0, -view_distance);
-    //glRotatef(rot_x, 1.0, 0.0, 0.0);
-    //glRotatef(rot_y, 0.0, 1.0, 0.0);
     QMatrix4x4 rot_mat;
-    rot_mat.rotate(rot_quat);
+    rot_mat.rotate(view_rotation);
     glMultMatrixd(rot_mat.data());
 
     nbody->posBuffer()->bind();
@@ -286,49 +470,61 @@ void NBodyWidget::paintGL()
     glVertexPointer(3, GL_FLOAT, 0, NULL);
 
     nbody->indexBuffer()->bind();
-    glDrawElements(GL_POINTS, nbody->bodiesCount(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_POINTS, nbody->simulatedBodiesCount(), GL_UNSIGNED_INT, nullptr);
 
     nbody->indexBuffer()->release();
 
     glDisableClientState(GL_VERTEX_ARRAY);
     nbody->posBuffer()->release();
 
-    glPopMatrix();
-
     if(has_point_sprite){
         glDisable(GL_POINT_SPRITE);
-        glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_BLEND);
     }
 
     glDepthMask(GL_TRUE);
 
-    if(sim_run) nbody->simulate();//1e-3);
+    if(sim_run) sim_run = nbody->simulate();
+}
+
+qreal NBodyWidget::calcNewValueExp(qreal old_value, qreal step, qreal scale)
+{
+    qreal delta = step * scale;
+
+    if(delta == 1.0 || delta == 0.0) return old_value;
+
+    if(step > 0.0){
+        return old_value * (1.0 + delta);
+    }else{
+        return old_value / (1.0 - delta);
+    }
 }
 
 void NBodyWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    if(event->buttons() != Qt::NoButton){
-        rot_x = event->y() - old_rot_x;
-        rot_y = event->x() - old_rot_y;
+    if((event->buttons() & Qt::LeftButton) != Qt::NoButton){
+        qreal rot_x = event->y() - old_event_y;
+        qreal rot_y = event->x() - old_event_x;
 
         QQuaternion q_rot_x = QQuaternion::fromAxisAndAngle(1.0, 0.0, 0.0, rot_x);
         QQuaternion q_rot_y = QQuaternion::fromAxisAndAngle(0.0, 1.0, 0.0, rot_y);
 
-        rot_quat = q_rot_x * q_rot_y * rot_quat;
+        view_rotation = q_rot_x * q_rot_y * view_rotation;
 
         if(!nbody->isRunning()) update();
     }
-    old_rot_x = event->y();
-    old_rot_y = event->x();
+
+    old_event_x = event->x();
+    old_event_y = event->y();
 }
 
 void NBodyWidget::wheelEvent(QWheelEvent *event)
 {
-    view_distance -= event->delta() / 4;
+    view_position = calcNewValueExp(view_position, - event->delta() / 8, 0.01);
 
-    if(view_distance < 1.0f) view_distance = 1.0f;
+    if(view_position < 1.0f) view_position = 1.0;
 
     if(!nbody->isRunning()) update();
 }

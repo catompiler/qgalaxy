@@ -10,7 +10,6 @@ public:
     SpiralGalaxy();
 
     bool generate();
-    bool generate_old();
 private:
 
     static const qreal G;

@@ -1,5 +1,4 @@
 #include "galaxy.h"
-#include <math.h>
 
 
 Galaxy::Galaxy()
@@ -130,37 +129,3 @@ void Galaxy::resizeVectors()
         m_stars_velosities->resize(m_stars_count);
     }
 }
-
-void Galaxy::vectorToPoint3f(Point3f &point, const QVector3D &vector)
-{
-    point.x = vector.x();
-    point.y = vector.y();
-    point.z = vector.z();
-}
-
-qreal Galaxy::lerp(qreal a, qreal b, qreal t)
-{
-    return a * (1.0 - t) + b * t;
-}
-
-qreal Galaxy::getRanduf()
-{
-    return static_cast<qreal>(rand()%RAND_MAX) / RAND_MAX;
-}
-
-qreal Galaxy::getRandsf()
-{
-    return getRanduf() * 2.0 - 1.0;
-}
-
-qreal Galaxy::radians(qreal degrs)
-{
-    return degrs * M_PI / 180.0;
-}
-
-qreal Galaxy::degrees(qreal rads)
-{
-    return rads * 180.0 / M_PI;
-}
-
-

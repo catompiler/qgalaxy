@@ -63,7 +63,7 @@ void EditBodyDialog::showEvent(QShowEvent* /*event*/)
 
 void EditBodyDialog::refreshUi()
 {
-    size_t count = nbodyWidget->bodiesCount();
+    size_t count = nbodyWidget->simulatedBodiesCount();
     if(count > 0){
         ui->sbIndex->setMaximum(count - 1);
     }else{

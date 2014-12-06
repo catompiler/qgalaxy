@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <iostream>
 #include <math.h>
+#include "utils.h"
+#include "point3f.h"
 //#include <QDebug>
 
 /*
@@ -16,6 +18,8 @@ const qreal SpiralGalaxy::G = 1.57e-13; //66462.65;
 const qreal SpiralGalaxy::depth_div_radius = 0.1;
 const qreal SpiralGalaxy::min_radius_k = 0.015;
 
+
+using namespace utils;
 
 
 SpiralGalaxy::SpiralGalaxy()
@@ -84,8 +88,8 @@ bool SpiralGalaxy::generate()
     if(m_stars_count < 2) return false;
 
     (*m_stars_masses)[0] = m_black_hole_mass;
-    vectorToPoint3f((*m_stars_positons)[0], m_position);
-    vectorToPoint3f((*m_stars_velosities)[0], m_velocity);
+    Point3f::vector3dToPoint3f((*m_stars_positons)[0], m_position);
+    Point3f::vector3dToPoint3f((*m_stars_velosities)[0], m_velocity);
 
     for(size_t i = 1; i < m_stars_count; i ++){
         // Масса.
@@ -173,8 +177,8 @@ bool SpiralGalaxy::generate()
 
         vel = tangent * v;
 
-        vectorToPoint3f((*m_stars_positons)[i], m_orientation.rotatedVector(pos) + m_position);
-        vectorToPoint3f((*m_stars_velosities)[i], m_orientation.rotatedVector(vel) + m_velocity);
+        Point3f::vector3dToPoint3f((*m_stars_positons)[i], m_orientation.rotatedVector(pos) + m_position);
+        Point3f::vector3dToPoint3f((*m_stars_velosities)[i], m_orientation.rotatedVector(vel) + m_velocity);
     }
 
     return true;

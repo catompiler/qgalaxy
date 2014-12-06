@@ -18,6 +18,11 @@ class CLProgram;
 class CLKernel;
 class CLEvent;
 
+
+//! Число измерений.
+#define NDRANGE_DIMENSIONS 1
+
+
 /**
  * @class NBody.
  * @brief Ксласс симуляции гравитационного взаимодействия.
@@ -42,6 +47,19 @@ public:
      * @return Число тел.
      */
     size_t bodiesCount() const;
+
+    /**
+     * @brief Получение числа моделируемых тел.
+     * @return Число моделируемых тел.
+     */
+    size_t simulatedBodiesCount() const;
+
+    /**
+     * @brief Установка числа моделируемых тел.
+     * @param count Число моделируемых тел.
+     * @return true в случае успеха, иначе false.
+     */
+    bool setSimulatedBodiesCount(size_t count);
 
     /**
      * @brief Получение шага симуляции.
@@ -77,6 +95,12 @@ public:
     bool destroy();
 
     /**
+     * @brief Сбрасывает параметры симуляции и тел.
+     * @return true в случае успеха, иначе false.
+     */
+    bool reset();
+
+    /**
      * @brief Получение флага готовности.
      * @return Флаг готовности.
      */
@@ -87,6 +111,12 @@ public:
      * @return Флаг выполнения вычислений.
      */
     bool isRunning() const;
+
+    /**
+     * @brief Ждёт завершения симуляции.
+     * @return true в случае успеха, иначе false.
+     */
+    bool wait() const;
 
     /**
      * @brief Установка значений масс объектов.
@@ -232,6 +262,11 @@ private:
     size_t bodies_count;
 
     /**
+     * @brief Число моделируемых объектов.
+     */
+    size_t simulated_bodies_count;
+
+    /**
      * @brief Шаг симуляции.
      */
     float time_step;
@@ -317,14 +352,14 @@ private:
     CLBuffer* cl_vel_buf[switch_buffers_count];
 
     /**
-     * @brief Глобальный размер измерений X,Y.
+     * @brief Глобальный размер измерений.
      */
-    size_t global_dims[2];
+    size_t global_dims[NDRANGE_DIMENSIONS];
 
     /**
-     * @brief Локальный размер измерений X,Y.
+     * @brief Локальный размер измерений.
      */
-    size_t local_dims[2];
+    size_t local_dims[NDRANGE_DIMENSIONS];
 
     /**
      * @brief Инициализирует OpenCL.

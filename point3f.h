@@ -11,6 +11,8 @@ struct Point3f
     QVector3D toVector3D() const;
     static Point3f fromQVector3D(const QVector3D& v);
 
+    static void vector3dToPoint3f(Point3f& point, const QVector3D& vector);
+
     float x;
     float y;
     float z;

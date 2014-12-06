@@ -1,6 +1,7 @@
 #include <QtGui/QApplication>
 #include <QTextCodec>
-#include <QMessageBox>
+#include <stdlib.h>
+#include <time.h>
 #include "mainwindow.h"
 #include "settings.h"
 
@@ -41,6 +42,8 @@ int main(int argc, char *argv[])
 #ifdef LIST_CL_PLATFORMS_DEVICES
     test();
 #endif
+
+    srand(time(nullptr));
 
     int exec_result = a.exec();
 

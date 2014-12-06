@@ -16,5 +16,6 @@
         <file>filesave.png</file>
         <file>fileopen.png</file>
         <file>edit.png</file>
+        <file>reset.png</file>
     </qresource>
 </RCC>

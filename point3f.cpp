@@ -19,3 +19,10 @@ Point3f Point3f::fromQVector3D(const QVector3D &v)
 {
     return Point3f(v.x(), v.y(), v.z());
 }
+
+void Point3f::vector3dToPoint3f(Point3f &point, const QVector3D &vector)
+{
+    point.x = vector.x();
+    point.y = vector.y();
+    point.z = vector.z();
+}

@@ -42,14 +42,6 @@ protected:
 
     void resizeVectors();
 
-    void vectorToPoint3f(Point3f& point, const QVector3D& vector);
-
-    static qreal lerp(qreal a, qreal b, qreal t);
-    static qreal getRanduf();
-    static qreal getRandsf();
-    static qreal radians(qreal degrs);
-    static qreal degrees(qreal rads);
-
     QVector<float>* m_stars_masses;
     QVector<Point3f>* m_stars_positons;
     QVector<Point3f>* m_stars_velosities;
