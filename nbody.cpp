@@ -49,12 +49,12 @@ NBody::NBody(QObject *parent) :
     current_in = 0;
     current_out = 1;
 
-    gl_index_buf = new QGLBuffer(QGLBuffer::IndexBuffer);
-    gl_mass_buf = new QGLBuffer(QGLBuffer::VertexBuffer);
+    gl_index_buf = new NBodyGLBuffer(NBodyGLBuffer::IndexBuffer);
+    gl_mass_buf = new NBodyGLBuffer(NBodyGLBuffer::VertexBuffer);
     cl_mass_buf = new CLBuffer();
     for(size_t i = 0; i < switch_buffers_count; i ++){
-        gl_pos_buf[i] = new QGLBuffer(QGLBuffer::VertexBuffer);
-        gl_vel_buf[i] = new QGLBuffer(QGLBuffer::VertexBuffer);
+        gl_pos_buf[i] = new NBodyGLBuffer(NBodyGLBuffer::VertexBuffer);
+        gl_vel_buf[i] = new NBodyGLBuffer(NBodyGLBuffer::VertexBuffer);
         cl_pos_buf[i] = new CLBuffer();
         cl_vel_buf[i] = new CLBuffer();
     }
@@ -126,38 +126,66 @@ CLContext *NBody::clcontext()
     return clcxt;
 }
 
+/**
+ * @brief Инициализация систему NBody.
+ * @param platform Платформа OpenCL.
+ * @param device Устройство OpenCL.
+ * @param bodies Число тел.
+ * @return true в случае успеха, иначе false.
+ */
 bool NBody::create(const CLPlatform& platform, const CLDevice& device, size_t bodies)
 {
+    // Нет смысла инициализировать систему из 0 тел.
     if(bodies == 0) return false;
 
     try{
+        // Получим максимальную доступную нам память устрйоства.
         size_t mem_size = device.maxMemAllocSize();
-        if(mem_size < bodies * sizeof(float) * (3 /*pos_in*/ + 3 /*pos_out*/ + 1 /*masses*/)){
+        // Если нам нужно больше.
+        if(mem_size < bodies * sizeof(float) * (3 * 2 /*pos,vel_in*/ + 3 * 2 /*pos,vel_out*/ + 1 /*masses*/)){
+            // Сообщим об этом.
             log(Log::ERROR, LOG_WHO, tr("Out of memory!"));
+            // Возврат.
             return false;
         }
-    }catch(CLException& e){
+    }// Если произошка ошибка.
+    catch(CLException& e){
+        // Сообщим об этом и считаем что памяти достаточно.
         log(Log::WARNING, LOG_WHO, e.what());
     }
 
+    // Если система уже была создана - уничтожим её.
     if(is_ready) destroy();
 
+    // Теперь система не создана.
+    is_ready = false;
+    // Установим новое число тел.
     bodies_count = bodies;
+    // Установим моделируемое число тел.
     simulated_bodies_count = bodies;
 
+    // Если не удалось создать буфера OpenGL.
     if(!createGLBuffers()){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, tr("Error creating OpenGL buffers!"));
+        // Возврат.
         return false;
     }
 
+    // Если не удалось проинииализировать OpenCL.
     if(!initOpenCL(platform, device)){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, tr("Error initializing OpenCL!"));
+        // Уничтожим буферы OpenGL.
         destroyGLBuffers();
+        // Возврат.
         return false;
     }
 
+    // Установим флаг готовности к симуляции.
     is_ready = true;
 
+    // Возврат успеха.
     return true;
 }
 
@@ -184,10 +212,9 @@ bool NBody::reset()
 
     simulated_bodies_count = bodies_count;
 
-    QVector<float> data(bodies_count * 3);
+    QVector<Point3f> data(bodies_count);
 
-    if(!setGLBufferData(gl_index_buf, data)) return false;
-    if(!setGLBufferData(gl_mass_buf, data)) return false;
+    if(!setGLBufferData(gl_mass_buf, *reinterpret_cast<QVector<float>*>(&data))) return false;
     for(size_t i = 0; i < switch_buffers_count; i ++){
         if(!setGLBufferData(gl_pos_buf[i], data)) return false;
         if(!setGLBufferData(gl_vel_buf[i], data)) return false;
@@ -298,50 +325,68 @@ bool NBody::getVelocities(QVector<Point3f> &data, size_t offset, size_t count) c
     return getGLBufferData(gl_vel_buf[current_in], data, offset, count);
 }
 
-QGLBuffer *NBody::indexBuffer()
+NBodyGLBuffer *NBody::indexBuffer()
 {
     return gl_index_buf;
 }
 
-QGLBuffer *NBody::massBuffer()
+NBodyGLBuffer *NBody::massBuffer()
 {
     return gl_mass_buf;
 }
 
-QGLBuffer *NBody::posBuffer()
+NBodyGLBuffer *NBody::posBuffer()
 {
     return gl_pos_buf[current_in];
 }
 
-QGLBuffer *NBody::velBuffer()
+NBodyGLBuffer *NBody::velBuffer()
 {
     return gl_vel_buf[current_in];
 }
 
+/**
+ * @brief Запускает расчёт симуляции очередного шага.
+ * Использует установленное время шага.
+ * @return true в случае успеха, иначе false.
+ */
 bool NBody::simulate()
 {
+    // Запустить симуляцию с ранее установленным временем шага.
     return simulate(time_step);
 }
 
+/**
+ * @brief Запускает расчёт симуляции очередного шага.
+ * @param dt Время шага.
+ * @return true в случае успеха, иначе false.
+ */
 bool NBody::simulate(float dt)
 {
+    // Если не готовы, либо симуляция уже просчитывается - возврат.
     if(!isReady() || isRunning()) return false;
 
+    // Результат.
     bool res = true;
 
+    // Подождём завершения операций OpenGL.
     glFinish();
 
+    // Если событие OpenCL создано.
     if(clevent->isValid()){
+        // Уничтожим его.
         try{ clevent->release(); }catch(CLException& e){ log(Log::WARNING, LOG_WHO, e.what()); }
     }
 
     try{
+        // Захватим буфера OpenGL.
         cl_mass_buf->enqueueAcquireGLObject(*clqueue);
         for(size_t i = 0; i < switch_buffers_count; i ++){
             cl_pos_buf[i]->enqueueAcquireGLObject(*clqueue);
             cl_vel_buf[i]->enqueueAcquireGLObject(*clqueue);
         }
 
+        // Установим аргументы ядра OpenCL.
         clkernel->setArg<float>(KERNEL_MAIN_ARG_DT, dt);
         clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_POSITIONS_IN,  cl_pos_buf[current_in ]->id());
         clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_POSITIONS_OUT, cl_pos_buf[current_out]->id());
@@ -349,75 +394,120 @@ bool NBody::simulate(float dt)
         clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_VELOCITIES_OUT, cl_vel_buf[current_out]->id());
         clkernel->setArg<unsigned int>(KERNEL_MAIN_ARG_COUNT, simulated_bodies_count);//bodies_count
 
+        // Запустим программу OpenCL.
         clkernel->execute(*clqueue, NDRANGE_DIMENSIONS, global_dims, local_dims);
 
-    }catch(CLException& e){
+    }// Если произошла ошибка.
+    catch(CLException& e){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, e.what());
+        // Результат - ошибка.
         res = false;
     }
 
+    // Освободим буферы OpenGL.
     try{cl_mass_buf->enqueueReleaseGLObject(*clqueue); }catch(CLException& e){ log(Log::WARNING, LOG_WHO, e.what()); }
     for(size_t i = 0; i < switch_buffers_count; i ++){
         try{ cl_pos_buf[i]->enqueueReleaseGLObject(*clqueue); }catch(CLException& e){ log(Log::WARNING, LOG_WHO, e.what()); }
         try{ cl_vel_buf[i]->enqueueReleaseGLObject(*clqueue); }catch(CLException& e){ log(Log::WARNING, LOG_WHO, e.what()); }
     }
 
+    // Если всё прошло успешно.
     if(res){
 
+        // Переключим буферы для чтения и записи.
         switchCurrentBuffers();
 
+        // Флаг установки маркера в очередь OpenCL.
         bool add_marker_res = false;
         try{
+            // Установим маркер в очередь OpenCL.
             add_marker_res = clqueue->marker(clevent);
-            clqueue->flush();
-        }catch(CLException& e){
+            // Отправим все команды на устройство.
+            //clqueue->flush();
+        }// Если произошла ошибка.
+        catch(CLException& e){
+            // Сообщим об этом.
             log(Log::WARNING, LOG_WHO, e.what());
         }
 
+        // Если маркер не установлен.
         if(!add_marker_res){
+            // Сообщим об этом.
             log(Log::WARNING, LOG_WHO, tr("Error enqueueing marker, waiting"));
             try{
+                // Подождём завершения вычислений.
                 res = clqueue->finish();
-            }catch(CLException& e){
+            }// Если произошла ошибка.
+            catch(CLException& e){
+                // Сообщим об этом.
                 log(Log::WARNING, LOG_WHO, e.what());
             }
+            // Пошлём сообщение окончания расчётов.
             emit simulationFinished();
         }
     }
 
+    // Возврат результата.
     return res;
 }
 
+/**
+ * @brief Инициализирует OpenCL.
+ * @param platform Платформа OpenCL.
+ * @param device Устройство OpenCL.
+ * @return true в случае успеха, иначе false.
+ */
 bool NBody::initOpenCL(const CLPlatform &platform, const CLDevice &device)
 {
     try{
+        // Сообщим используемое устройство OpenCL.
         log(Log::INFO, LOG_WHO, tr("Using OpenCL device: %1").arg(device.name()));
 
-        if(!clcxt->create(platform, CLDeviceList() << device, true)) return false;
+        // Если не удалось сосздать контекст OpenCL.
+        if(!clcxt->create(platform, CLDeviceList() << device, true)){
+            // Возврат.
+            return false;
+        }
 
+        // Если не удалось создать очередь команд OpenCL.
         if(!clqueue->create(*clcxt, device)){
+            // Уничтожим OpenCL.
             termOpenCL();
+            // Возврат.
             return false;
         }
 
+        // Если не удалось создать буферы OpenCL.
         if(!createCLBuffers()){
+            // Уничтожим OpenCL.
             termOpenCL();
+            // Возврат.
             return false;
         }
 
+        // Если не удалось создать программу OpenCL.
         if(!createCLProgram()){
+            // Уничтожим OpenCL.
             termOpenCL();
+            // Возврат.
             return false;
         }
 
+        // Если не удалось вычислить размер NDRange OpenCL.
         if(!calculateDimsSizes()){
+            // Уничтожим OpenCL.
             termOpenCL();
+            // Возврат.
             return false;
         }
-
-    }catch(CLException& e){
+    }// Если произошла ошибка.
+    catch(CLException& e){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, e.what());
+        // Уничтожим OpenCL.
         termOpenCL();
+        // Возврат.
         return false;
     }
 
@@ -496,47 +586,64 @@ bool NBody::termOpenCL()
     return true;
 }*/
 
+/**
+ * @brief Вычисляет размеры измерений X,Y.
+ * @return true в случае успеха, иначе false.
+ */
 bool NBody::calculateDimsSizes()
 {
     try{
+        // Получим устройство OpenCL.
         CLDevice device = clcxt->devices().first();
 
 #if NDRANGE_DIMENSIONS > 1
+        // Если устройство не поддерживает больше одного измерения.
         if(device.maxWorkItemDimensions() < 2){
+            // Сообщим об этом.
             log(Log::ERROR, LOG_WHO, tr("Two or more dimensions is not supported"));
+            // Возврат.
             return false;
         }
 #endif
 
+        // Получим размер рабочей группы устройства.
         size_t dev_work_grp_size = device.maxWorkGroupSize();
+        // Получим размер рабочей группы ядра.
         size_t knl_work_grp_size = clkernel->workGroupSize(device);
+        // Получим число вычислительных элементов.
         size_t dev_compute_units = device.maxComputeUnits();
 
+        // Сообщим полученные числа.
         log(Log::INFO, LOG_WHO, tr("Device max compute units: %1").arg(dev_compute_units));
         log(Log::INFO, LOG_WHO, tr("Device max work group size: %1").arg(dev_work_grp_size));
         log(Log::INFO, LOG_WHO, tr("Kernel max work group size: %1").arg(knl_work_grp_size));
 
+        // Выберем допустимый размер рабочей группы.
         size_t local_work_size = std::min(dev_work_grp_size,
                                           knl_work_grp_size);
 
+        // Установим размер локальных измерений.
         local_dims[0] = local_work_size;
 #if NDRANGE_DIMENSIONS > 1
         local_dims[1] = 1;
 #endif
-
+        // Установим размер глобальных измерений.
         global_dims[0] = static_cast<size_t>(ceil(static_cast<float>(bodies_count) / local_work_size)) * local_work_size;
 #if NDRANGE_DIMENSIONS > 1
         global_dims[1] = 1;
 #endif
 
+        // Сообщим рекомендованное число звёзд.
         log(Log::INFO, LOG_WHO, tr("Recommended maximum number of stars: %1").arg(local_work_size * dev_compute_units));
 
+        // Сообщим используемый размер локальных измерений.
         log(Log::INFO, LOG_WHO, tr("Using local work size %1x%2").arg(local_dims[0])
 #if NDRANGE_DIMENSIONS > 1
                 .arg(local_dims[1]));
 #else
                 .arg(1));
 #endif
+        // Сообщим используемый размер глобальных измерений.
         log(Log::INFO, LOG_WHO, tr("Using global work size %1x%2").arg(global_dims[0])
 #if NDRANGE_DIMENSIONS > 1
                 .arg(global_dims[1]));
@@ -544,64 +651,100 @@ bool NBody::calculateDimsSizes()
                 .arg(1));
 #endif
 
-    }catch(CLException& e){
+    }// Если произошла ошибка.
+    catch(CLException& e){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, e.what());
+        // Возврат.
         return false;
     }
 
+    // Возврат успеха.
     return true;
 }
 
+/**
+ * @brief Создаёт, считывает и компилирует программу OpenCL.
+ * @return true в случае успеха, иначе false.
+ */
 bool NBody::createCLProgram()
 {
+    // Файл программы.
     QFile file(clprogram_file_name);
+    // Если не удалось открыть файл.
     if(!file.open(QIODevice::ReadOnly)){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, tr("Error open OpenCL program file"));
+        // Возврат.
         return false;
     }
 
+    // Считаем код программы из файла.
     QString source = file.readAll();
 
+    // Закроем файл.
     file.close();
 
+    // Если файл пуст, либо произошла ошибка чтения.
     if(source.isEmpty()){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, tr("Invalid OpenCL program from file"));
+        // Возврат.
         return false;
     }
 
     try{
+        // Попытаемся создать программу со считанным исходным кодом.
         clprogram->create(*clcxt, source);
-    }catch(CLException& e){
+    }// Если произошла ошибка.
+    catch(CLException& e){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, e.what());
+        // Возврат.
         return false;
     }
 
     try{
+        // Попытаемся скомпилировать программу.
         clprogram->build(clcxt->devices(), QStringList() << "-cl-mad-enable" << "-cl-fast-relaxed-math");
-    }catch(CLException& e){
+    }// Если произошла ошибка.
+    catch(CLException& e){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, e.what());
 
         try{
+            // Получим лог компиляции.
             QString buildLog = clprogram->buildLog(clcxt->devices().first());
+            // Выведем его в лог.
             log(Log::ERROR, LOG_WHO, tr("Build log:\n") + buildLog);
-        }catch(CLException& e){
+        }// Если произошла ошибка.
+        catch(CLException& e){
+            // Сообщим об этом.
             log(Log::ERROR, LOG_WHO, e.what());
         }
+        // Выгрузим компилятор OpenCL.
         CLProgram::unloadCompiler();
+        // Возврат.
         return false;
     }
 
+    // Выгрузим компилятор OpenCL.
     CLProgram::unloadCompiler();
 
     try{
+        // Создадим ядро программы OpenCL.
         clkernel->create(*clprogram, clprogram_kernel_name);
+        // Установим неизменяемые аргументы, здесь - буфер масс.
         clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_MASSES, cl_mass_buf->id());
-    }catch(CLException& e){
+    }// Если произошла ошибка.
+    catch(CLException& e){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, e.what());
-
+        // Возврат.
         return false;
     }
 
+    // Возврат успеха.
     return true;
 }
 
@@ -628,16 +771,16 @@ bool NBody::createGLBuffers()
 
     QVector<float> init_data(bodies_count * 3);
 
-    res = createGLBuffer(gl_mass_buf,  QGLBuffer::StaticDraw, sizeof(float), init_data.data()) &&
-          createGLBuffer(gl_index_buf, QGLBuffer::StaticDraw, sizeof(unsigned int));
+    res = createGLBuffer(gl_mass_buf,  NBodyGLBuffer::StaticDraw, sizeof(float), init_data.data()) &&
+          createGLBuffer(gl_index_buf, NBodyGLBuffer::StaticDraw, sizeof(unsigned int));
     if(!res){
         destroyGLBuffers();
         return false;
     }
 
     for(size_t i = 0; i < switch_buffers_count; i ++){
-        res = createGLBuffer(gl_pos_buf[i], QGLBuffer::StaticDraw, sizeof(float) * 3, init_data.data()) &&
-              createGLBuffer(gl_vel_buf[i], QGLBuffer::StaticDraw, sizeof(float) * 3, init_data.data());
+        res = createGLBuffer(gl_pos_buf[i], NBodyGLBuffer::StaticDraw, sizeof(float) * 3, init_data.data()) &&
+              createGLBuffer(gl_vel_buf[i], NBodyGLBuffer::StaticDraw, sizeof(float) * 3, init_data.data());
         if(!res){
             destroyGLBuffers();
             return false;
@@ -648,7 +791,7 @@ bool NBody::createGLBuffers()
         destroyGLBuffers();
         return false;
     }
-        unsigned int* ptr = static_cast<unsigned int*>(gl_index_buf->map(QGLBuffer::WriteOnly));
+        unsigned int* ptr = static_cast<unsigned int*>(gl_index_buf->map(NBodyGLBuffer::WriteOnly));
 
         if(ptr == nullptr){
             destroyGLBuffers();
@@ -661,8 +804,8 @@ bool NBody::createGLBuffers()
     gl_index_buf->unmap();
     gl_index_buf->release();
 
-    QGLBuffer::release(QGLBuffer::VertexBuffer);
-    QGLBuffer::release(QGLBuffer::IndexBuffer);
+    NBodyGLBuffer::release(NBodyGLBuffer::VertexBuffer);
+    NBodyGLBuffer::release(NBodyGLBuffer::IndexBuffer);
 
     return true;
 }
@@ -680,7 +823,7 @@ bool NBody::destroyGLBuffers()
     return true;
 }
 
-bool NBody::createGLBuffer(QGLBuffer *buf, QGLBuffer::UsagePattern usage, size_t item_size_bytes, const void *data)
+bool NBody::createGLBuffer(NBodyGLBuffer *buf, NBodyGLBuffer::UsagePattern usage, size_t item_size_bytes, const void *data)
 {
     if(!buf->create()) return false;
     if(!buf->bind()) return false;
@@ -689,7 +832,7 @@ bool NBody::createGLBuffer(QGLBuffer *buf, QGLBuffer::UsagePattern usage, size_t
     return true;
 }
 
-bool NBody::destroyGLBuffer(QGLBuffer *buf)
+bool NBody::destroyGLBuffer(NBodyGLBuffer *buf)
 {
     if(buf && buf->isCreated()){
         buf->destroy();
@@ -698,13 +841,13 @@ bool NBody::destroyGLBuffer(QGLBuffer *buf)
     return false;
 }
 
-bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<QVector3D> &data, size_t offset)
+bool NBody::setGLBufferData(NBodyGLBuffer *buf, const QVector<QVector3D> &data, size_t offset)
 {
     if(!buf->isCreated()) return false;
     if((offset + static_cast<size_t>(data.size())) * 3 > static_cast<size_t>(buf->size())) return false;
 
     if(!buf->bind()) return false;
-        float* ptr = static_cast<float*>(buf->map(QGLBuffer::WriteOnly));
+        float* ptr = static_cast<float*>(buf->map(NBodyGLBuffer::WriteOnly));
 
         if(ptr == nullptr) return false;
 
@@ -722,7 +865,7 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<QVector3D> &data, size
     return true;
 }
 
-bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<Point3f> &data, size_t offset)
+bool NBody::setGLBufferData(NBodyGLBuffer *buf, const QVector<Point3f> &data, size_t offset)
 {
     if(!buf->isCreated()) return false;
     if((offset + static_cast<size_t>(data.size())) * 3 > static_cast<size_t>(buf->size())) return false;
@@ -734,13 +877,13 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<Point3f> &data, size_t
     return true;
 }
 
-bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<qreal> &data, size_t offset)
+bool NBody::setGLBufferData(NBodyGLBuffer *buf, const QVector<qreal> &data, size_t offset)
 {
     if(!buf->isCreated()) return false;
     if((offset + static_cast<size_t>(data.size())) > static_cast<size_t>(buf->size())) return false;
 
     if(!buf->bind()) return false;
-        float* ptr = static_cast<float*>(buf->map(QGLBuffer::WriteOnly));
+        float* ptr = static_cast<float*>(buf->map(NBodyGLBuffer::WriteOnly));
 
         if(ptr == nullptr) return false;
 
@@ -755,7 +898,7 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<qreal> &data, size_t o
     return true;
 }
 
-bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<float> &data, size_t offset)
+bool NBody::setGLBufferData(NBodyGLBuffer *buf, const QVector<float> &data, size_t offset)
 {
     if(!buf->isCreated()) return false;
     if((offset + static_cast<size_t>(data.size())) > static_cast<size_t>(buf->size())) return false;
@@ -767,13 +910,13 @@ bool NBody::setGLBufferData(QGLBuffer *buf, const QVector<float> &data, size_t o
     return true;
 }
 
-bool NBody::getGLBufferData(QGLBuffer *buf, QVector<QVector3D> &data, size_t offset, size_t count) const
+bool NBody::getGLBufferData(NBodyGLBuffer *buf, QVector<QVector3D> &data, size_t offset, size_t count) const
 {
     if(!buf->isCreated()) return false;
     if((offset + count) * 3 > static_cast<size_t>(buf->size())) return false;
 
     if(!buf->bind()) return false;
-        float* ptr = static_cast<float*>(buf->map(QGLBuffer::WriteOnly));
+        float* ptr = static_cast<float*>(buf->map(NBodyGLBuffer::WriteOnly));
 
         if(ptr == nullptr) return false;
 
@@ -789,7 +932,7 @@ bool NBody::getGLBufferData(QGLBuffer *buf, QVector<QVector3D> &data, size_t off
     return true;
 }
 
-bool NBody::getGLBufferData(QGLBuffer *buf, QVector<Point3f> &data, size_t offset, size_t count) const
+bool NBody::getGLBufferData(NBodyGLBuffer *buf, QVector<Point3f> &data, size_t offset, size_t count) const
 {
     if(!buf->isCreated()) return false;
     if((offset + count) * 3 > static_cast<size_t>(buf->size())) return false;
@@ -802,13 +945,13 @@ bool NBody::getGLBufferData(QGLBuffer *buf, QVector<Point3f> &data, size_t offse
     return true;
 }
 
-bool NBody::getGLBufferData(QGLBuffer *buf, QVector<qreal> &data, size_t offset, size_t count) const
+bool NBody::getGLBufferData(NBodyGLBuffer *buf, QVector<qreal> &data, size_t offset, size_t count) const
 {
     if(!buf->isCreated()) return false;
     if((offset + count) > static_cast<size_t>(buf->size())) return false;
 
     if(!buf->bind()) return false;
-        float* ptr = static_cast<float*>(buf->map(QGLBuffer::WriteOnly));
+        float* ptr = static_cast<float*>(buf->map(NBodyGLBuffer::WriteOnly));
 
         if(ptr == nullptr) return false;
 
@@ -823,7 +966,7 @@ bool NBody::getGLBufferData(QGLBuffer *buf, QVector<qreal> &data, size_t offset,
     return true;
 }
 
-bool NBody::getGLBufferData(QGLBuffer *buf, QVector<float> &data, size_t offset, size_t count) const
+bool NBody::getGLBufferData(NBodyGLBuffer *buf, QVector<float> &data, size_t offset, size_t count) const
 {
     if(!buf->isCreated()) return false;
     if((offset + count) > static_cast<size_t>(buf->size())) return false;
@@ -864,7 +1007,7 @@ bool NBody::destroyCLBuffers()
     return true;
 }
 
-bool NBody::createCLBuffer(CLBuffer *clbuf, cl_mem_flags flags, QGLBuffer *glbuf)
+bool NBody::createCLBuffer(CLBuffer *clbuf, cl_mem_flags flags, NBodyGLBuffer *glbuf)
 {
     try{
         return clbuf->createFromGLBuffer(*clcxt, flags, glbuf->bufferId());

@@ -4,9 +4,16 @@
 #include <QObject>
 #include <QVector>
 #include <QVector3D>
-#include <QGLBuffer>
 #include <CL/opencl.h>
 #include "point3f.h"
+
+#ifdef CUSTOM_GLBUFFER
+#include "glbuffer.h"
+typedef GLBuffer NBodyGLBuffer;
+#else
+#include <QGLBuffer>
+typedef QGLBuffer NBodyGLBuffer;
+#endif
 
 
 class CLPlatform;
@@ -224,25 +231,25 @@ public:
      * @brief Получение индексного буфера.
      * @return Индексный буфер.
      */
-    QGLBuffer* indexBuffer();
+    NBodyGLBuffer* indexBuffer();
 
     /**
      * @brief Получение буфера масс.
      * @return Буфер масс.
      */
-    QGLBuffer* massBuffer();
+    NBodyGLBuffer* massBuffer();
 
     /**
      * @brief Получение буфера позиций.
      * @return Буфер позиций.
      */
-    QGLBuffer* posBuffer();
+    NBodyGLBuffer* posBuffer();
 
     /**
      * @brief Получение буфера скоростей.
      * @return Буфер скоростей.
      */
-    QGLBuffer* velBuffer();
+    NBodyGLBuffer* velBuffer();
 
 signals:
     /**
@@ -252,7 +259,18 @@ signals:
 
 public slots:
 
+    /**
+     * @brief Запускает расчёт симуляции очередного шага.
+     * Использует установленное время шага.
+     * @return true в случае успеха, иначе false.
+     */
     bool simulate();
+
+    /**
+     * @brief Запускает расчёт симуляции очередного шага.
+     * @param dt Время шага.
+     * @return true в случае успеха, иначе false.
+     */
     bool simulate(float dt);
 
 private:
@@ -294,22 +312,22 @@ private:
     /**
      * @brief Индексный буфер OpenGL.
      */
-    QGLBuffer* gl_index_buf;
+    NBodyGLBuffer* gl_index_buf;
 
     /**
      * @brief Буфер масс OpenGL.
      */
-    QGLBuffer* gl_mass_buf;
+    NBodyGLBuffer* gl_mass_buf;
 
     /**
      * @brief Буферы позиций OpenGL.
      */
-    QGLBuffer* gl_pos_buf[switch_buffers_count];
+    NBodyGLBuffer* gl_pos_buf[switch_buffers_count];
 
     /**
      * @brief Буферы скоростей OpenGL.
      */
-    QGLBuffer* gl_vel_buf[switch_buffers_count];
+    NBodyGLBuffer* gl_vel_buf[switch_buffers_count];
 
     /**
      * @brief Контекст OpenCL.
@@ -419,14 +437,14 @@ private:
      * @param item_size_bytes Размер элемента буфера в байтах.
      * @return true в случае успеха, иначе false.
      */
-    bool createGLBuffer(QGLBuffer* buf, QGLBuffer::UsagePattern usage, size_t item_size_bytes, const void* data = nullptr);
+    bool createGLBuffer(NBodyGLBuffer* buf, NBodyGLBuffer::UsagePattern usage, size_t item_size_bytes, const void* data = nullptr);
 
     /**
      * @brief Уничтожает буфер OpenGL.
      * @param buf Буфер OpenGL.
      * @return true в случае успеха, иначе false.
      */
-    bool destroyGLBuffer(QGLBuffer* buf);
+    bool destroyGLBuffer(NBodyGLBuffer* buf);
 
     /**
      * @brief Запись в буфер данных.
@@ -435,7 +453,7 @@ private:
      * @param offset Смещение в буфере, в элементах вектора.
      * @return true в случае успеха, иначе false.
      */
-    bool setGLBufferData(QGLBuffer* buf, const QVector<QVector3D>& data, size_t offset = 0);
+    bool setGLBufferData(NBodyGLBuffer* buf, const QVector<QVector3D>& data, size_t offset = 0);
 
     /**
      * @brief Запись в буфер данных.
@@ -444,7 +462,7 @@ private:
      * @param offset Смещение в буфере, в элементах вектора.
      * @return true в случае успеха, иначе false.
      */
-    bool setGLBufferData(QGLBuffer* buf, const QVector<Point3f>& data, size_t offset = 0);
+    bool setGLBufferData(NBodyGLBuffer* buf, const QVector<Point3f>& data, size_t offset = 0);
 
     /**
      * @brief Запись в буфер данных.
@@ -453,7 +471,7 @@ private:
      * @param offset Смещение в буфере, в элементах вектора.
      * @return true в случае успеха, иначе false.
      */
-    bool setGLBufferData(QGLBuffer* buf, const QVector<qreal>& data, size_t offset = 0);
+    bool setGLBufferData(NBodyGLBuffer* buf, const QVector<qreal>& data, size_t offset = 0);
 
     /**
      * @brief Запись в буфер данных.
@@ -462,7 +480,7 @@ private:
      * @param offset Смещение в буфере, в элементах вектора.
      * @return true в случае успеха, иначе false.
      */
-    bool setGLBufferData(QGLBuffer* buf, const QVector<float>& data, size_t offset = 0);
+    bool setGLBufferData(NBodyGLBuffer* buf, const QVector<float>& data, size_t offset = 0);
 
     /**
      * @brief Чтение из буфера данных.
@@ -472,7 +490,7 @@ private:
      * @param count Количество.
      * @return true в случае успеха, иначе false.
      */
-    bool getGLBufferData(QGLBuffer* buf, QVector<QVector3D>& data, size_t offset = 0, size_t count = 0) const;
+    bool getGLBufferData(NBodyGLBuffer* buf, QVector<QVector3D>& data, size_t offset = 0, size_t count = 0) const;
 
     /**
      * @brief Чтение из буфера данных.
@@ -482,7 +500,7 @@ private:
      * @param count Количество.
      * @return true в случае успеха, иначе false.
      */
-    bool getGLBufferData(QGLBuffer* buf, QVector<Point3f>& data, size_t offset = 0, size_t count = 0) const;
+    bool getGLBufferData(NBodyGLBuffer* buf, QVector<Point3f>& data, size_t offset = 0, size_t count = 0) const;
 
     /**
      * @brief Чтение из буфера данных.
@@ -492,7 +510,7 @@ private:
      * @param count Количество.
      * @return true в случае успеха, иначе false.
      */
-    bool getGLBufferData(QGLBuffer* buf, QVector<qreal>& data, size_t offset = 0, size_t count = 0) const;
+    bool getGLBufferData(NBodyGLBuffer* buf, QVector<qreal>& data, size_t offset = 0, size_t count = 0) const;
 
     /**
      * @brief Чтение из буфера данных.
@@ -502,7 +520,7 @@ private:
      * @param count Количество.
      * @return true в случае успеха, иначе false.
      */
-    bool getGLBufferData(QGLBuffer* buf, QVector<float>& data, size_t offset = 0, size_t count = 0) const;
+    bool getGLBufferData(NBodyGLBuffer* buf, QVector<float>& data, size_t offset = 0, size_t count = 0) const;
 
     /**
      * @brief Создаёт буферы OpenCL.
@@ -523,7 +541,7 @@ private:
      * @param glbuf Буфер OpenGL.
      * @return true в случае успеха, иначе false.
      */
-    bool createCLBuffer(CLBuffer* clbuf, cl_mem_flags flags, QGLBuffer* glbuf);
+    bool createCLBuffer(CLBuffer* clbuf, cl_mem_flags flags, NBodyGLBuffer* glbuf);
 
     /**
      * @brief Уничтожает буфер OpenCL.

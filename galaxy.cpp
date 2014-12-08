@@ -1,5 +1,9 @@
 #include "galaxy.h"
 
+/*
+ G, LY^3 / (Msun * Year^2)
+*/
+const qreal Galaxy::G = 1.57e-13; //66462.65;
 
 Galaxy::Galaxy()
 {
@@ -77,9 +81,9 @@ const QQuaternion& Galaxy::orientation() const
     return m_orientation;
 }
 
-void Galaxy::setStarsCount(size_t count_)
+void Galaxy::setStarsCount(size_t count)
 {
-    m_stars_count = count_;
+    m_stars_count = count;
 }
 
 void Galaxy::setMinStarMass(qreal mass_min)

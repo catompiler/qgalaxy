@@ -9,10 +9,13 @@ class SpiralGalaxy
 public:
     SpiralGalaxy();
 
+    /**
+     * @brief Функция генерации галактики.
+     * @return true в случае успеха, иначе false.
+     */
     bool generate();
 private:
 
-    static const qreal G;
     static const qreal depth_div_radius;
     static const qreal min_radius_k;
 };

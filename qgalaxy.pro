@@ -9,17 +9,30 @@ QT       += core gui opengl
 TARGET = qgalaxy
 TEMPLATE = app
 
+DEFINES += "CUSTOM_GLBUFFER"
+
 QMAKE_CXXFLAGS += -std=c++11
 
-linux32 {
-    LIBS += -L/usr/X11R6/lib
+linux-g++-32 {
+    LIBS += -L/usr/X11R6/lib -L/usr/lib
 }
 
-linux64 {
-    LIBS += -L/usr/X11R6/lib64
+linux-g++-64 {
+    LIBS += -L/usr/X11R6/lib64 -L/usr/lib64
 }
 
-LIBS += -lGL -lOpenCL -lGLU
+linux-g++ {
+    LIBS += -lGL -lGLU -lOpenCL
+}
+
+win32 {
+    LIBS += -lOpenGL32 -lGLU32 -lOpenCL
+}
+
+contains(DEFINES, "CUSTOM_GLBUFFER"){
+    SOURCES += glbuffer.cpp
+    HEADERS += glbuffer.h
+}
 
 SOURCES += main.cpp\
         mainwindow.cpp \

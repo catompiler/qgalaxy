@@ -55,6 +55,7 @@ NBodyWidget::NBodyWidget(QWidget *parent) :
     setMouseTracking(true);
 
     nbody = new NBody(this);
+    // Соединение сигнала завершения симуляции и слота обработки завершения симуляции.
     connect(nbody, SIGNAL(simulationFinished()), this, SLOT(on_simulationFinished()));
     connect(nbody, SIGNAL(simulationFinished()), this, SIGNAL(simulationFinished()));
 
@@ -129,125 +130,208 @@ void NBodyWidget::setTimeStep(float dt)
     nbody->setTimeStep(dt);
 }
 
+/**
+ * @brief Сохранение взаимодействующих тел в файл.
+ * @param filename Имя файла.
+ * @return true в случае успеха, иначе false.
+ */
 bool NBodyWidget::saveNBody(const QString &filename)
 {
-    if(!nbody->isReady()) return false;
-    if(nbody->isRunning()) return false;
+    // Если инициализация была неудачной, либо идёт симуляция - возврат.
+    if(!nbody->isReady() || nbody->isRunning()) return false;
 
+    // Сообщим что сохраняем данные.
     log(Log::INFO, LOG_WHO, tr("Saving file: %1").arg(filename));
 
+    // Файл.
     QFile file(filename);
+    // Есом не удалось открыть файл.
     if(!file.open(QIODevice::WriteOnly)){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, tr("Error open file!"));
+        // Возврат.
         return false;
     }
 
+    // Получим число тел.
     size_t count = nbody->simulatedBodiesCount();
 
+    // Массив для временного хранения масс.
     QVector<float> mass;
+    // Массивы для временного хранения позиций и векторов скоростей.
     QVector<Point3f> pos, vel;
 
+    // Если не удалось получить данные.
     if(!getBodies(0, count, mass, pos, vel)){
+        // Сообщим об этом.
         log(Log::WARNING, LOG_WHO, tr("Error getting bodies!"));
+        // Закроем файл.
         file.close();
+        // Возврат.
         return false;
     }
 
+    // Поток данных.
     QDataStream ds(&file);
+    // Установим версию,
+    // Это необходимо для корректной сериализации/десериализации.
     ds.setVersion(QDataStream::Qt_4_8);
 
-    ds << data_file_magic << data_file_version << static_cast<unsigned int>(count);
+    // Запишем в файл подпись и версию формата, число тел.
+    ds << data_file_magic << data_file_version << static_cast<quint32>(count);
 
+    // Если не удалось записать.
+    if(ds.status() != QDataStream::Ok){
+        // Сообщим об этом.
+        log(Log::WARNING, LOG_WHO, tr("Error writing data!"));
+        // Закроем файл.
+        file.close();
+        // Возврат.
+        return false;
+    }
+    // Если неудалось записать массы, позиции или векторы скоростей.
     if(ds.writeRawData(reinterpret_cast<char*>(mass.data()), mass.size() * sizeof(float)) == -1 ||
        ds.writeRawData(reinterpret_cast<char*>(pos.data()), pos.size() * sizeof(Point3f)) == -1 ||
        ds.writeRawData(reinterpret_cast<char*>(vel.data()), vel.size() * sizeof(Point3f)) == -1){
 
+        // Сообщим об этом.
         log(Log::WARNING, LOG_WHO, tr("Error writing data!"));
+        // Закроем файл.
         file.close();
+        // Возврат.
         return false;
     }
 
+    // Закроем файл.
     file.close();
 
+    // Сообщим об успешном сохранении данных.
     log(Log::INFO, LOG_WHO, tr("File saved!"));
 
+    // Возврат успешного результата.
     return true;
 }
 
+/**
+ * @brief Загрузка взаимодействующих тел из файла.
+ * @param filename Имя файла.
+ * @return true в случае успеха, иначе false.
+ */
 bool NBodyWidget::openNBody(const QString &filename)
 {
-    if(!nbody->isReady()) return false;
-    if(nbody->isRunning()) return false;
+    // Если инициализация была неудачной, либо идёт симуляция - возврат.
+    if(!nbody->isReady() || nbody->isRunning()) return false;
 
+    // Сообщим что загружаем данные.
     log(Log::INFO, LOG_WHO, tr("Opening file: %1").arg(filename));
 
+    // Файл.
     QFile file(filename);
+    // Есом не удалось открыть файл.
     if(!file.open(QIODevice::ReadOnly)){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, tr("Error open file!"));
+        // Возврат.
         return false;
     }
 
+    // Массив для временного хранения масс.
     QVector<float> mass;
+    // Массивы для временного хранения позиций и векторов скоростей.
     QVector<Point3f> pos, vel;
 
+    // Подпись и версия формата файла.
     quint32 magic, version;
+    // Число тел.
     unsigned int count;
 
+    // Поток данных.
     QDataStream ds(&file);
+    // Установим версию,
+    // Это необходимо для корректной сериализации/десериализации.
     ds.setVersion(QDataStream::Qt_4_8);
 
+    // Считаем подпись формата.
     ds >> magic;
 
+    // Если формат некорректен.
     if(magic != data_file_magic){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, tr("Invalid file magic!"));
+        // Закроем файл.
         file.close();
+        // Возврат.
         return false;
     }
 
+    // Считаем версию формата.
     ds >> version;
 
+    // Если версия некорректна.
     if(version != data_file_version){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, tr("Invalid file version!"));
+        // Закроем файл.
         file.close();
+        // Возврат.
         return false;
     }
 
+    // Считаем число тел.
     ds >> count;
 
+    // Если система симуляции не имеет в распоряжении такое количество.
     if(nbody->bodiesCount() < count){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, tr("Insufficient number of bodies. Required: %1.").arg(count));
+        // Закроем файл.
         file.close();
+        // Возврат.
         return false;
     }
 
+    // Сообщим число тел в файле.
     log(Log::INFO, LOG_WHO, tr("Bodies in file: %1").arg(count));
 
+    // Изменим размеры массивов под нужное число тел.
     mass.resize(count);
     pos.resize(count);
     vel.resize(count);
 
+    // Если неудалось считать массы, позиции или векторы скоростей.
     if(ds.readRawData(reinterpret_cast<char*>(mass.data()), mass.size() * sizeof(float)) == -1 ||
        ds.readRawData(reinterpret_cast<char*>(pos.data()), pos.size() * sizeof(Point3f)) == -1 ||
        ds.readRawData(reinterpret_cast<char*>(vel.data()), vel.size() * sizeof(Point3f)) == -1){
 
+        // Сообщим об этом.
         log(Log::WARNING, LOG_WHO, tr("Error reading data!"));
+        // Закроем файл.
         file.close();
+        // Возврат.
         return false;
     }
 
+    // Закроем файл.
     file.close();
 
+    // Если не удалось установить новые тела.
     if(!setBodies(0, mass, pos, vel)){
+        // Сообщим об этом.
         log(Log::WARNING, LOG_WHO, tr("Error setting bodies!"));
+        // Возврат.
         return false;
     }
 
+    // Установим число взаимодействующих тел.
     nbody->setSimulatedBodiesCount(count);
 
+    // Назначим обновление визуализации.
     update();
 
-    log(Log::INFO, LOG_WHO, tr("File opened!"));
+    // Сообщим об успешной загрузке данных.
+    log(Log::INFO, LOG_WHO, tr("File loaded!"));
 
+    // Возврат успешного результата.
     return true;
 }
 
@@ -349,80 +433,128 @@ void NBodyWidget::stopSimulation()
     nbody->wait();
 }
 
+/**
+ * @brief Пересоздание системы симуляции.
+ * @return true в случае успеха, иначе false.
+ */
 bool NBodyWidget::recreateNBody()
 {
+    // Результат.
     bool res = true;
+
+    // Установим симуляцию как не выполняющуюся.
     sim_run = false;
 
+    // Доступность контекста OpenGL.
     bool has_glcontext = QGLContext::currentContext() != nullptr;
 
+    // Если нет - сделаем текущим контекст, созданный QGLWidget.
     if(!has_glcontext) makeCurrent();
 
+    // Установим шаг симуляции.
     nbody->setTimeStep(Settings::get().timeStep());
 
     try{
+        // Получаем платформу и устройство OpenCL
+        // из настроек.
         CLPlatform platform = CLPlatform::byName(Settings::get().clPlatformName());
         CLDevice device = platform.deviceByName(Settings::get().clDeviceName());
 
+        // Уничтожаем возможно созданную ранее систему симуляции.
         nbody->destroy();
+
+        // Если не удалось создать систему симуляции.
         if(!nbody->create(platform, device, Settings::get().bodiesCount())){
+            // Сообщим об этом.
             log(Log::ERROR, LOG_WHO, tr("Error initializing NBody system"));
+            // Результат - отрицательный.
             res = false;
         }
-    }catch(CLException& e){
+    }//Если где-то произошла ошибка.
+    catch(CLException& e){
+        // Сообщим об этом.
         log(Log::ERROR, LOG_WHO, e.what());
+        // Результат - отрицательный.
         res = false;
     }
 
+    // Если в начале функции небыло контекста OpenGL - уберём текущий контекст.
     if(!has_glcontext) doneCurrent();
 
+    // Обозначим необходимость обновить визуализацию.
     update();
 
+    // Оповестим всех об окончании визуализации, успешной или нет.
     emit nbodyInitialized();
 
+    // Возвратим результат.
     return res;
 }
 
+/**
+ * @brief Слот завершения симуляции.
+ */
 void NBodyWidget::on_simulationFinished()
 {
+    // Поместить сообщение необходимости перерисовки области
+    // просмотра в очередь событий приложения.
     update();
 }
 
+/**
+ * @brief Функция настройки OpenGL.
+ */
 void NBodyWidget::initializeGL()
 {
+    // Имя расширения GL_ARB_point_sprite.
     static const char* gl_point_sprite_ext = "GL_ARB_point_sprite";
 
+    // Сообщим об инициализации.
     log(Log::INFO, LOG_WHO, tr("Initializing OpenGL"));
 
+    // Цвет очистки фона.
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glClearDepth(1.0f);
 
+    // Запрет теста глубины.
+    glDisable(GL_DEPTH_TEST);
+
+    // Получим список расширений.
     QString glexts = QString::fromAscii(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)));
 
+    // Если в списке расширений имеется
+    // расширение GL_ARB_point_sprite.
     if(glexts.contains(gl_point_sprite_ext)){
 
+        // Попытаемся загрузить текстуру звезды.
         sprite_texture = bindTexture(QImage(":/images/star.png"), GL_TEXTURE_2D, GL_RGBA);
 
+        // Если удачно.
         if(sprite_texture != 0){
-
+            // Обозначим наличие текстуры для звезды.
             has_point_sprite = true;
+            // Освободим двумерную текстуру.
             glBindTexture(GL_TEXTURE_2D, 0);
         }
     }else{
+        // Иначе сообщим о невозможности отрисовывать спрайты.
         log(Log::WARNING, LOG_WHO, tr("GL_ARB_point_sprite is not supported!"));
     }
 
+    // Если возможно рисовать спрайты.
     if(has_point_sprite){
+        // Разрешим генерацию текстурных координат для точек.
         glTexEnvf(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+        // Установим размер точек.
         glPointSize(7.5f);
     }else{
+        // Иначе будем рисовать точки поменьше и без текстуры.
         glPointSize(2.5f);
     }
 
+    // Разрешение сглаживания точек.
     glEnable(GL_POINT_SMOOTH);
 
+    // Переинициализируем систему симуляции.
     recreateNBody();
 }
 
@@ -437,56 +569,82 @@ void NBodyWidget::resizeGL(int width, int height)
     glMatrixMode(GL_MODELVIEW);
 }
 
+/**
+ * @brief Функция перерисовки.
+ */
 void NBodyWidget::paintGL()
 {
-    if(!nbody->isReady()) return;
-    if(nbody->isRunning()) return;
+    // Если нет данных для визуализации, либо невозможно её выполнить - возврат.
+    if(!nbody->isReady() || nbody->isRunning()) return;
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Очистим экран.
+    glClear(GL_COLOR_BUFFER_BIT);
 
+    // Установим матрицу модели.
     glMatrixMode(GL_MODELVIEW);
+    // Сбросим матрицу.
     glLoadIdentity();
-
+    // Установим позицию наблюдателя.
     gluLookAt(0.0f, 0.0f, view_position,
               0.0f, 0.0f, 0.0f,
               0.0f, 1.0f, 0.0f);
 
-    glDepthMask(GL_FALSE);
+    // Матрица вращения.
+    QMatrix4x4 rot_mat;
+    // Получим матрицу вращения из кватерниона вращения.
+    rot_mat.rotate(view_rotation);
+    // Применим матрицу вращения.
+    glMultMatrixd(rot_mat.data());
 
+    // Если возможно текстурировать звёзды.
     if(has_point_sprite){
+        // Разрешим смешивание.
         glEnable(GL_BLEND);
+        // Параметры функции смешивания.
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // Свяжем идентификатор текстуры с текущей двумерной текстурой.
         glBindTexture(GL_TEXTURE_2D, sprite_texture);
+        // Разрешим двумерную текстуру.
         glEnable(GL_TEXTURE_2D);
+        // Разрешим текстурирование точек.
         glEnable(GL_POINT_SPRITE);
     }
 
-    QMatrix4x4 rot_mat;
-    rot_mat.rotate(view_rotation);
-    glMultMatrixd(rot_mat.data());
-
+    // Установим буфер позиций.
     nbody->posBuffer()->bind();
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, NULL);
 
+    // Установим индексный буфер.
     nbody->indexBuffer()->bind();
+
+    // Отрисуем звзёды.
     glDrawElements(GL_POINTS, nbody->simulatedBodiesCount(), GL_UNSIGNED_INT, nullptr);
 
+    // Сбросим установки индексного буфера.
     nbody->indexBuffer()->release();
 
+    // Сбросим установки буфера позиций.
     glDisableClientState(GL_VERTEX_ARRAY);
     nbody->posBuffer()->release();
 
+    // Если возможно текстурировать звёзды.
     if(has_point_sprite){
+        // Запретим текстурирование точек.
         glDisable(GL_POINT_SPRITE);
+        // Запретим двумерную текстуру.
         glDisable(GL_TEXTURE_2D);
+        // Сбросим свяязь текущей двумерной текстуры.
         glBindTexture(GL_TEXTURE_2D, 0);
+        // Запретим смешивание.
         glDisable(GL_BLEND);
     }
 
-    glDepthMask(GL_TRUE);
-
-    if(sim_run) sim_run = nbody->simulate();
+    // Если запущена непрерывная симуляция.
+    if(sim_run){
+        // Запустим вычисления.
+        sim_run = nbody->simulate();
+    }
 }
 
 qreal NBodyWidget::calcNewValueExp(qreal old_value, qreal step, qreal scale)

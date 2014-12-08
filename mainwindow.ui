@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>580</width>
-    <height>520</height>
+    <width>578</width>
+    <height>518</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -15,6 +15,10 @@
   </property>
   <property name="windowTitle">
    <string>QGalaxy</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="res.qrc">
+    <normaloff>:/images/qgalaxy_icon_64x64.png</normaloff>:/images/qgalaxy_icon_64x64.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -28,7 +32,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>580</width>
+     <width>578</width>
      <height>22</height>
     </rect>
    </property>

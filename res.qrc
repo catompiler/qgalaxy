@@ -17,5 +17,6 @@
         <file>fileopen.png</file>
         <file>edit.png</file>
         <file>reset.png</file>
+        <file>qgalaxy_icon_64x64.png</file>
     </qresource>
 </RCC>
