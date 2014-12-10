@@ -13,6 +13,9 @@ const qreal SpiralGalaxy::min_radius_k = 0.015;
 using namespace utils;
 
 
+#define GALAXY_EXP_GEN
+
+
 SpiralGalaxy::SpiralGalaxy()
     :Galaxy()
 {
@@ -116,8 +119,11 @@ bool SpiralGalaxy::generate()
         // Масса.
         (*m_stars_masses)[i] = lerp(m_star_mass_min, m_star_mass_max, getRanduf());
         // Расстояние до центрального тела.
+#ifdef GALAXY_EXP_GEN
         r_a = min_radius + (/**/1.0 - sqrt/**/(getRanduf())) * avail_dradius;
-        //r_a = min_radius + getRanduf() * avail_dradius;
+#else
+        r_a = min_radius + getRanduf() * avail_dradius;
+#endif
 
         // Высота над диском.
         max_h = depth_div_radius * m_radius * pow(1.0 - r_a/m_radius, 2);
@@ -196,7 +202,14 @@ bool SpiralGalaxy::generate()
         //qDebug() << "r_a =" << r_a;
 
         // Вычислим массу звёзд + ЧД внутри орбиты.
-        mass_stars_in_radius = average_mass * other_stars_count * (1.0 - sqrt(r_a / m_radius));
+
+        mass_stars_in_radius = average_mass * other_stars_count *
+#ifdef GALAXY_EXP_GEN
+                (1.0 - sqrt(r_a / m_radius));
+#else
+                (r_a / m_radius);
+#endif
+
         sum_mass = mass_stars_in_radius + m_black_hole_mass;
 
         // Вычислим орбитальную скорость.

@@ -12,12 +12,18 @@
 #include <QMatrix4x4>
 #include <QFile>
 #include <QDataStream>
+#include <QDebug>
 
 
 #define LOG_WHO "NBody View"
 
 
 #define VIEW_DISTANCE_DEFAULT 5000.0f
+
+
+
+//PFNGLPOINTPARAMETERFARBPROC NBodyWidget::glPointParameterfARB;
+//PFNGLPOINTPARAMETERFVARBPROC NBodyWidget::glPointParameterfvARB;
 
 
 NBodyWidget::NBodyWidget(QWidget *parent) :
@@ -63,6 +69,8 @@ NBodyWidget::NBodyWidget(QWidget *parent) :
 
     has_point_sprite = false;
     sprite_texture = 0;
+
+    has_point_parameters = false;
 
     view_position = VIEW_DISTANCE_DEFAULT;
     old_event_x = 0.0f;
@@ -508,6 +516,8 @@ void NBodyWidget::initializeGL()
 {
     // Имя расширения GL_ARB_point_sprite.
     static const char* gl_point_sprite_ext = "GL_ARB_point_sprite";
+    // Имя расширения GL_ARB_point_parameters.
+    static const char* gl_point_parameters_ext = "GL_ARB_point_parameters";
 
     // Сообщим об инициализации.
     log(Log::INFO, LOG_WHO, tr("Initializing OpenGL"));
@@ -520,6 +530,9 @@ void NBodyWidget::initializeGL()
 
     // Получим список расширений.
     QString glexts = QString::fromAscii(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)));
+
+    // Получим адреса нужных функций.
+    init_gl_functions();
 
     // Если в списке расширений имеется
     // расширение GL_ARB_point_sprite.
@@ -540,6 +553,14 @@ void NBodyWidget::initializeGL()
         log(Log::WARNING, LOG_WHO, tr("GL_ARB_point_sprite is not supported!"));
     }
 
+    if(glexts.contains(gl_point_parameters_ext)){
+        has_point_parameters = (glPointParameterfARB != nullptr) &&
+                               (glPointParameterfvARB != nullptr);
+    }else{
+        // Иначе сообщим о невозможности отрисовывать спрайты.
+        log(Log::WARNING, LOG_WHO, tr("GL_ARB_point_parameters is not supported!"));
+    }
+
     // Если возможно рисовать спрайты.
     if(has_point_sprite){
         // Разрешим генерацию текстурных координат для точек.
@@ -549,6 +570,25 @@ void NBodyWidget::initializeGL()
     }else{
         // Иначе будем рисовать точки поменьше и без текстуры.
         glPointSize(2.5f);
+    }
+
+    if(has_point_parameters){
+
+        float atten[3]={0.0f, 1e-3f, 1e-10f};
+
+        float fade = 0.1f;
+
+        float point_size_min, point_size_max;
+
+        glGetFloatv(GL_POINT_SIZE_MIN_ARB, &point_size_min);
+        glGetFloatv(GL_POINT_SIZE_MAX_ARB, &point_size_max);
+
+        glPointParameterfARB(GL_POINT_SIZE_MIN_ARB, fade < point_size_min ? point_size_min : fade);
+        glPointParameterfARB(GL_POINT_SIZE_MAX_ARB, point_size_max);
+        glPointParameterfARB(GL_POINT_FADE_THRESHOLD_SIZE_ARB, fade);
+        glPointParameterfvARB(GL_POINT_DISTANCE_ATTENUATION_ARB, atten);
+
+        log(Log::INFO, LOG_WHO, tr("Point size: %1 ... %2").arg(point_size_min).arg(point_size_max));
     }
 
     // Разрешение сглаживания точек.
@@ -684,5 +724,25 @@ void NBodyWidget::wheelEvent(QWheelEvent *event)
 
     if(view_position < 1.0f) view_position = 1.0;
 
+    qDebug() << "z:" << view_position;
+
     if(!nbody->isRunning()) update();
+}
+
+bool NBodyWidget::init_gl_functions()
+{
+    static bool initialized = false;
+
+    if(initialized) return true;
+
+    const QGLContext* cxt = QGLContext::currentContext();
+
+    if(cxt == nullptr) return false;
+
+    glPointParameterfARB = reinterpret_cast<PFNGLPOINTPARAMETERFARBPROC>(cxt->getProcAddress("glPointParameterfARB"));
+    glPointParameterfvARB = reinterpret_cast<PFNGLPOINTPARAMETERFVARBPROC>(cxt->getProcAddress("glPointParameterfvARB"));
+
+    initialized = true;
+
+    return true;
 }

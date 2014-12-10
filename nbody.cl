@@ -1,3 +1,9 @@
+//#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+//#pragma OPENCL EXTENSION cl_amd_printf : enable
+//#pragma FP_CONTRACT on
+//__attribute__((vec_type_hint(float3)))
+
+#define RADIUS_EPSILON 1e-18f
 
 /**
  * @brief Ядро программы OpenCL.
@@ -32,7 +38,7 @@ __kernel void kernel_main(unsigned int count,
     /*
     G, LY^3 / (Msun * Year^2)
     */
-    const float G = 1.57e-13;
+    const float G = 1.57e-13f;
 
     // Номер звезды.
     id = get_global_id(1) * get_global_size(0) + get_global_id(0);
@@ -65,7 +71,7 @@ __kernel void kernel_main(unsigned int count,
         // Получим длину вектора.
         r = length(vec_dr);
         // Предотвратим слишком близкое сближение и уход ускорения в бесконечность.
-        if(r < 0.00001f) r = 0.00001f;
+        r = max(r, RADIUS_EPSILON);
         // Нормализуем вектор.
         vec_dr = vec_dr / r;
         // Вычислим и накомпи ускорение от взаимодействия с очередной звездой.

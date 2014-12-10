@@ -255,6 +255,11 @@ private:
     bool has_point_sprite;
 
     /**
+     * @brief Флаг наличия расширения GL_ARB_point_parameters.
+     */
+    bool has_point_parameters;
+
+    /**
      * @brief Идентификатор текстуры.
      */
     GLuint sprite_texture;
@@ -278,6 +283,15 @@ private:
      * @brief Предыдущее положение мыши по оси Y.
      */
     float old_event_y;
+
+    /**
+     * @brief Получает адреса функций расширений OpenGL.
+     * @return true в случае успеха, иначе false.
+     */
+    bool init_gl_functions();
+
+    PFNGLPOINTPARAMETERFARBPROC glPointParameterfARB;
+    PFNGLPOINTPARAMETERFVARBPROC glPointParameterfvARB;
 };
 
 #endif // NBODYWIDGET_H
