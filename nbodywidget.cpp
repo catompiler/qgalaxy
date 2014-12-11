@@ -22,8 +22,8 @@
 
 
 
-//PFNGLPOINTPARAMETERFARBPROC NBodyWidget::glPointParameterfARB;
-//PFNGLPOINTPARAMETERFVARBPROC NBodyWidget::glPointParameterfvARB;
+PFNGLPOINTPARAMETERFARBPROC NBodyWidget::glPointParameterfARB;
+PFNGLPOINTPARAMETERFVARBPROC NBodyWidget::glPointParameterfvARB;
 
 
 NBodyWidget::NBodyWidget(QWidget *parent) :
@@ -574,7 +574,7 @@ void NBodyWidget::initializeGL()
 
     if(has_point_parameters){
 
-        float atten[3]={0.0f, 1e-3f, 1e-10f};
+        float atten[3]={0.0f, 2e-3f, 1e-10f};
 
         float fade = 0.1f;
 
@@ -724,7 +724,7 @@ void NBodyWidget::wheelEvent(QWheelEvent *event)
 
     if(view_position < 1.0f) view_position = 1.0;
 
-    qDebug() << "z:" << view_position;
+    //qDebug() << "z:" << view_position;
 
     if(!nbody->isRunning()) update();
 }

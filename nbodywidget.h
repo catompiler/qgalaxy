@@ -3,6 +3,7 @@
 
 #include <QGLWidget>
 #include <QtOpenGL>
+#include <GL/glext.h>
 #include <QVector>
 #include <QVector3D>
 #include <QQuaternion>
@@ -290,8 +291,8 @@ private:
      */
     bool init_gl_functions();
 
-    PFNGLPOINTPARAMETERFARBPROC glPointParameterfARB;
-    PFNGLPOINTPARAMETERFVARBPROC glPointParameterfvARB;
+    static PFNGLPOINTPARAMETERFARBPROC glPointParameterfARB;
+    static PFNGLPOINTPARAMETERFVARBPROC glPointParameterfvARB;
 };
 
 #endif // NBODYWIDGET_H

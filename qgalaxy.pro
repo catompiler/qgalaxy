@@ -11,7 +11,7 @@ TEMPLATE = app
 
 DEFINES += "CUSTOM_GLBUFFER"
 
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++0x -U__STRICT_ANSI__
 
 linux-g++-32 {
     LIBS += -L/usr/X11R6/lib -L/usr/lib
