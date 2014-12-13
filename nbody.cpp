@@ -34,6 +34,10 @@ static const char* clprogram_kernel_name = "kernel_main";
 #define KERNEL_MAIN_ARG_VELOCITIES_OUT 4
 #define KERNEL_MAIN_ARG_MASSES 5
 #define KERNEL_MAIN_ARG_DT 6
+#define KERNEL_MAIN_ARG_POS_CACHE 7
+#define KERNEL_MAIN_ARG_MASS_CACHE 8
+#define KERNEL_MAIN_ARG_CACHE_SIZE 9
+
 
 
 NBody::NBody(QObject *parent) :
@@ -734,8 +738,60 @@ bool NBody::createCLProgram()
     try{
         // Создадим ядро программы OpenCL.
         clkernel->create(*clprogram, clprogram_kernel_name);
-        // Установим неизменяемые аргументы, здесь - буфер масс.
+    }// Если произошла ошибка.
+    catch(CLException& e){
+        // Сообщим об этом.
+        log(Log::ERROR, LOG_WHO, e.what());
+        // Возврат.
+        return false;
+    }
+
+    // Размер кэша по-умолчанию -
+    // минимальный объём памяти
+    // для работы.
+    size_t cache_count = 1;
+
+    try{
+        // Устройство OpenCL.
+        CLDevice device = clcxt->devices().first();
+
+        // Объём локальной памяти.
+        size_t local_mem = device.localMemSize() - clkernel->localMemSize(device);
+
+        // Сообщим.
+        log(Log::INFO, LOG_WHO, tr("Available local memory size: %1 byte(s)").arg(local_mem));
+
+        // Если памяти недостаточно.
+        if(local_mem < (sizeof(unsigned int) + sizeof(float) * 3)){
+            // Сообщим об этом.
+            log(Log::ERROR, LOG_WHO, tr("Local memory is too small!"));
+            // Возврат.
+            return false;
+        }
+        // Вычислим число кэшированных элементов.
+        cache_count = local_mem / (sizeof(unsigned int) + sizeof(float) * 3);
+
+        // Число рабочих элементов.
+        size_t work_items = clkernel->workGroupSize(device);
+
+        // Нет смысла в кэше больше чем число рабочих элементов.
+        if(cache_count > work_items) cache_count = work_items;
+
+    }// Если произошла ошибка.
+    catch(CLException& e){
+        // Сообщим об этом.
+        log(Log::WARNING, LOG_WHO, e.what());
+    }
+
+    log(Log::INFO, LOG_WHO, tr("Number of cached data: %1").arg(cache_count));
+
+    try{
+        // Установим неизменяемые аргументы.
+        // Буфер масс.
         clkernel->setArg<cl_mem>(KERNEL_MAIN_ARG_MASSES, cl_mass_buf->id());
+        clkernel->setLocalArgSize(KERNEL_MAIN_ARG_POS_CACHE, cache_count * sizeof(float) * 3);
+        clkernel->setLocalArgSize(KERNEL_MAIN_ARG_MASS_CACHE, cache_count * sizeof(float));
+        clkernel->setArg<unsigned int>(KERNEL_MAIN_ARG_CACHE_SIZE, cache_count);
     }// Если произошла ошибка.
     catch(CLException& e){
         // Сообщим об этом.
