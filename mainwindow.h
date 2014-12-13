@@ -9,6 +9,7 @@ class NBodyWidget;
 class OCLSettingsDialog;
 class EditBodyDialog;
 class QFile;
+class QTimer;
 
 namespace Ui {
 class MainWindow;
@@ -55,6 +56,11 @@ private slots:
      * @brief Обработчик окончания очередного шага моделирования.
      */
     void nbodyWidget_onSimulated();
+
+    /**
+     * @brief Обработчик события таймера FPS.
+     */
+    void fpsTimer_onTimeout();
 
     /**
      * @brief Обработчик действия выхода.
@@ -120,11 +126,20 @@ private:
     //! Счётчик времени симуляции.
     qreal simulated_years;
 
+    //! Счётчик кадров в секунду.
+    quint32 cur_fps;
+
+    //! Счётчик кадров.
+    quint32 cur_frames;
+
     //! Текущий каталог.
     QString cur_dir;
 
     //! Файл лога.
     QFile* logFile;
+
+    //! Таймер FPS.
+    QTimer* fpsTimer;
 
     //! Интерфейс пользователя.
     Ui::MainWindow *ui;

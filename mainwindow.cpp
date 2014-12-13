@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QTimer>
 #include "clplatform.h"
 #include "cldevice.h"
 #include "log.h"
@@ -17,7 +18,7 @@
 #include "editbodydialog.h"
 #include "nbodywidget.h"
 #include "spiralgalaxy.h"
-#include <QDebug>
+//#include <QDebug>
 
 
 
@@ -45,6 +46,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(nbodyWidget, SIGNAL(simulationFinished()),
             this, SLOT(nbodyWidget_onSimulated()));
 
+    fpsTimer = new QTimer(this);
+    connect(fpsTimer, SIGNAL(timeout()),
+            this, SLOT(fpsTimer_onTimeout()));
+
     oclSettingsDlg = nullptr;
 
     editBodyDlg = nullptr;
@@ -53,11 +58,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
     simulated_years = 0.0;
 
+    cur_fps = 0;
+    cur_frames = 0;
+
     refreshUi();
 }
 
 MainWindow::~MainWindow()
 {
+    fpsTimer->stop();
+    delete fpsTimer;
+
     delete editBodyDlg;
     delete oclSettingsDlg;
     delete nbodyWidget;
@@ -125,6 +136,8 @@ void MainWindow::nbodyWidget_onInitialized()
 
 void MainWindow::nbodyWidget_onSimulated()
 {
+    cur_frames ++;
+
     simulated_years += nbodyWidget->timeStep();
 
     QString units;
@@ -146,7 +159,13 @@ void MainWindow::nbodyWidget_onSimulated()
         units = tr("лет.");
     }
 
-    statusBar()->showMessage(tr("%1 %2").arg(years, 0, 'f', 6).arg(units));
+    statusBar()->showMessage(tr("%1 %2 FPS: %3").arg(years, 0, 'f', 6).arg(units).arg(cur_fps));
+}
+
+void MainWindow::fpsTimer_onTimeout()
+{
+    cur_fps = cur_frames;
+    cur_frames = 0;
 }
 
 void MainWindow::on_actExit_triggered()
@@ -203,12 +222,14 @@ void MainWindow::on_actSimStart_triggered()
 {
     nbodyWidget->setSimulationRunning(true);
     refreshUi();
+    if(nbodyWidget->isSimulationRunning()) fpsTimer->start(1000);
 }
 
 void MainWindow::on_actSimStop_triggered()
 {
     nbodyWidget->setSimulationRunning(false);
     refreshUi();
+    fpsTimer->stop();
 }
 
 void MainWindow::on_actGenSGalaxy_triggered()
