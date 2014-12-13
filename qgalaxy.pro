@@ -26,6 +26,7 @@ linux-g++ {
 }
 
 win32 {
+    RC_FILE += winrc.rc
     LIBS += -lOpenGL32 -lGLU32 -lOpenCL
 }
 
