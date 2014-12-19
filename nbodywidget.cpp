@@ -133,6 +133,11 @@ float NBodyWidget::timeStep() const
     return nbody->timeStep();
 }
 
+double NBodyWidget::simulationTime() const
+{
+    return sim_time.count();
+}
+
 void NBodyWidget::setTimeStep(float dt)
 {
     nbody->setTimeStep(dt);
@@ -493,7 +498,7 @@ bool NBodyWidget::recreateNBody()
     update();
 
     // Оповестим всех об окончании визуализации, успешной или нет.
-    emit nbodyInitialized();
+    emit nbodyStatusChanged();
 
     // Возвратим результат.
     return res;
@@ -504,6 +509,9 @@ bool NBodyWidget::recreateNBody()
  */
 void NBodyWidget::on_simulationFinished()
 {
+    sim_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+                    std::chrono::high_resolution_clock::now() - sim_time_start);
+    //qDebug() << "Simulation time:" << sim_time.count() * 1000.0 << "ms";
     // Поместить сообщение необходимости перерисовки области
     // просмотра в очередь событий приложения.
     update();
@@ -684,6 +692,10 @@ void NBodyWidget::paintGL()
     if(sim_run){
         // Запустим вычисления.
         sim_run = nbody->simulate();
+        // Если ошибка - пошлём сообщение.
+        if(!sim_run) emit nbodyStatusChanged();
+        // Время.
+        sim_time_start = std::chrono::high_resolution_clock::now();
     }
 }
 

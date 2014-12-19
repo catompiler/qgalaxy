@@ -41,8 +41,8 @@ MainWindow::MainWindow(QWidget *parent) :
     nbodyWidget = new NBodyWidget(this);
     setCentralWidget(nbodyWidget);
 
-    connect(nbodyWidget, SIGNAL(nbodyInitialized()),
-            this, SLOT(nbodyWidget_onInitialized()));
+    connect(nbodyWidget, SIGNAL(nbodyStatusChanged()),
+            this, SLOT(nbodyWidget_onStatusChanged()));
     connect(nbodyWidget, SIGNAL(simulationFinished()),
             this, SLOT(nbodyWidget_onSimulated()));
 
@@ -129,7 +129,7 @@ void MainWindow::addlog(Log::MsgType msg_type, const QString& who, const QString
     }
 }
 
-void MainWindow::nbodyWidget_onInitialized()
+void MainWindow::nbodyWidget_onStatusChanged()
 {
     refreshUi();
 }

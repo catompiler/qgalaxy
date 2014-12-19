@@ -427,8 +427,14 @@ bool NBody::simulate(float dt)
         try{
             // Установим маркер в очередь OpenCL.
             add_marker_res = clqueue->marker(clevent);
-            // Отправим все команды на устройство.
-            //clqueue->flush();
+            // Если расчёт уже закончен.
+            if(clevent->isCompleted()){
+                // Пошлём сообщение окончания расчётов.
+                emit simulationFinished();
+            }else{
+                // Отправим все команды на устройство.
+                clqueue->flush();
+            }
         }// Если произошла ошибка.
         catch(CLException& e){
             // Сообщим об этом.

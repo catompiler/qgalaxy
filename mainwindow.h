@@ -48,9 +48,9 @@ public slots:
 
 private slots:
     /**
-     * @brief Обработчик инициализации системы моделирования.
+     * @brief Обработчик изменения состояния системы моделирования.
      */
-    void nbodyWidget_onInitialized();
+    void nbodyWidget_onStatusChanged();
 
     /**
      * @brief Обработчик окончания очередного шага моделирования.

@@ -7,6 +7,7 @@
 #include <QVector>
 #include <QVector3D>
 #include <QQuaternion>
+#include <chrono>
 #include "point3f.h"
 
 
@@ -86,6 +87,13 @@ public:
     float timeStep() const;
 
     /**
+     * @brief Получение продолжительности
+     * последней симуляции, с.
+     * @return Продолжительность симуляции.
+     */
+    double simulationTime() const;
+
+    /**
      * @brief Установка шага симуляции.
      * @param dt Шаг симуляции.
      */
@@ -154,9 +162,9 @@ signals:
     void simulationFinished();
 
     /**
-     * @brief Сигнал окончания инициализации.
+     * @brief Сигнал изменения состояния.
      */
-    void nbodyInitialized();
+    void nbodyStatusChanged();
 
 public slots:
 
@@ -290,6 +298,16 @@ private:
      * @return true в случае успеха, иначе false.
      */
     bool init_gl_functions();
+
+    /**
+     * @brief Время симуляции.
+     */
+    std::chrono::duration<double> sim_time;
+
+    /**
+     * @brief Время начала симуляции.
+     */
+    std::chrono::high_resolution_clock::time_point sim_time_start;
 
     static PFNGLPOINTPARAMETERFARBPROC glPointParameterfARB;
     static PFNGLPOINTPARAMETERFVARBPROC glPointParameterfvARB;
