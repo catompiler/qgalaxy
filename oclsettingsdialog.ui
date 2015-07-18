@@ -6,12 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>219</width>
-    <height>429</height>
+    <width>217</width>
+    <height>427</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Настройки OpenCL</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="res.qrc">
+    <normaloff>:/images/opencl_icon.png</normaloff>:/images/opencl_icon.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>
@@ -206,7 +210,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

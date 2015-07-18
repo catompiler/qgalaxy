@@ -16,6 +16,7 @@
 #include "settings.h"
 #include "oclsettingsdialog.h"
 #include "editbodydialog.h"
+#include "gensettingsdialog.h"
 #include "nbodywidget.h"
 #include "spiralgalaxy.h"
 //#include <QDebug>
@@ -54,6 +55,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     editBodyDlg = nullptr;
 
+    genSettingsDlg = nullptr;
+
     cur_dir = QDir::currentPath();
 
     simulated_years = 0.0;
@@ -71,6 +74,7 @@ MainWindow::~MainWindow()
 
     delete editBodyDlg;
     delete oclSettingsDlg;
+    delete genSettingsDlg;
     delete nbodyWidget;
     delete ui;
 
@@ -218,6 +222,37 @@ void MainWindow::on_actSettingsOCL_triggered()
     refreshUi();
 }
 
+void MainWindow::on_actGenSettings_triggered()
+{
+    if(!genSettingsDlg) genSettingsDlg = new GenSettingsDialog(this);
+
+    genSettingsDlg->setStarMassMin(Settings::get().starMassMin());
+    genSettingsDlg->setStarMassMax(Settings::get().starMassMax());
+    genSettingsDlg->setBhMassMin(Settings::get().bhMassMin());
+    genSettingsDlg->setBhMassMax(Settings::get().bhMassMax());
+
+    genSettingsDlg->setSingleRadius(Settings::get().singleRadius());
+    genSettingsDlg->setRadiusMin(Settings::get().radiusMin());
+    genSettingsDlg->setRadiusMax(Settings::get().radiusMax());
+
+    genSettingsDlg->setDistanceMax(Settings::get().distanceMax());
+    genSettingsDlg->setVelocityMax(Settings::get().velocityMax());
+
+    if(genSettingsDlg->exec()){
+        Settings::get().setStarMassMin(genSettingsDlg->starMassMin());
+        Settings::get().setStarMassMax(genSettingsDlg->starMassMax());
+        Settings::get().setBhMassMin(genSettingsDlg->bhMassMin());
+        Settings::get().setBhMassMax(genSettingsDlg->bhMassMax());
+
+        Settings::get().setSingleRadius(genSettingsDlg->singleRadius());
+        Settings::get().setRadiusMin(genSettingsDlg->radiusMin());
+        Settings::get().setRadiusMax(genSettingsDlg->radiusMax());
+
+        Settings::get().setDistanceMax(genSettingsDlg->distanceMax());
+        Settings::get().setVelocityMax(genSettingsDlg->velocityMax());
+    }
+}
+
 void MainWindow::on_actSimStart_triggered()
 {
     nbodyWidget->setSimulationRunning(true);
@@ -232,15 +267,31 @@ void MainWindow::on_actSimStop_triggered()
     fpsTimer->stop();
 }
 
+//1e-1
+#define STAR_MASS_MIN_MIN 1e1
+//1e0
+#define STAR_MASS_MIN_MAX 1e2
+//1e0
+#define STAR_MASS_MAX_MIN 1e2
+//1e1
+#define STAR_MASS_MAX_MAX 1e3
+//1e6
+#define BLACK_HOLE_MASS_MIN 1e7
+//1e7
+#define BLACK_HOLE_MASS_MAX 1e8
+
 void MainWindow::on_actGenSGalaxy_triggered()
 {
     SpiralGalaxy galaxy;
 
     galaxy.setStarsCount(Settings::get().bodiesCount());
-    galaxy.setRadius(2000.0);
-    galaxy.setMinStarMass(utils::getRandf(1e-1, 1e0));//5e-1
-    galaxy.setMaxStarMass(utils::getRandf(1e0, 1e1));//2e0
-    galaxy.setBlackHoleMass(utils::getRandf(1e6, 1e7));//1e7
+    galaxy.setRadius(Settings::get().singleRadius());
+    galaxy.setMinStarMass(Settings::get().starMassMin());//5e-1
+    galaxy.setMaxStarMass(Settings::get().starMassMax());//2e0
+    galaxy.setBlackHoleMass(utils::getRandf(
+                                Settings::get().bhMassMin(),
+                                Settings::get().bhMassMax()
+                                ));//1e7
 
     if(!galaxy.generate() || !nbodyWidget->setBodies(0, galaxy.starsMasses(), galaxy.starsPositons(), galaxy.starsVelosities())){
         log(Log::ERROR, LOG_WHO, tr("Ошибка генерации галактики!"));
@@ -267,8 +318,8 @@ void MainWindow::on_actGenGalaxyCollision_triggered()
 
     size_t stars_per_galaxy = all_stars_count / galaxies_count;
 
-    const qreal max_axis_pos = 1000.0 * galaxies_count;
-    const qreal max_axis_vel = 1e-5;
+    const qreal max_axis_pos = Settings::get().distanceMax() * galaxies_count;
+    const qreal max_axis_vel = Settings::get().velocityMax();
 
     for(size_t i = 0; i < galaxies_count; i ++){
         if(i == galaxies_count - 1){
@@ -276,10 +327,13 @@ void MainWindow::on_actGenGalaxyCollision_triggered()
         }else{
             galaxy.setStarsCount(stars_per_galaxy);
         }
-        galaxy.setRadius(utils::getRandf(1000.0, 2000.0));
-        galaxy.setMinStarMass(utils::getRandf(1e-1, 1e0));//5e-1
-        galaxy.setMaxStarMass(utils::getRandf(1e0, 1e1));//2e0
-        galaxy.setBlackHoleMass(utils::getRandf(1e6, 1e7));//1e7
+        galaxy.setRadius(utils::getRandf(Settings::get().radiusMin(), Settings::get().radiusMax()));
+        galaxy.setMinStarMass(Settings::get().starMassMin());//5e-1
+        galaxy.setMaxStarMass(Settings::get().starMassMax());//2e0
+        galaxy.setBlackHoleMass(utils::getRandf(
+                                    Settings::get().bhMassMin(),
+                                    Settings::get().bhMassMax()
+                                    ));//1e7
         galaxy.setPosition(QVector3D(utils::getRandf(-max_axis_pos, max_axis_pos),
                                      utils::getRandf(-max_axis_pos, max_axis_pos),
                                      utils::getRandf(-max_axis_pos, max_axis_pos)));
@@ -346,6 +400,26 @@ void MainWindow::on_actSimReset_triggered()
     resetSimData();
 }
 
+void MainWindow::on_actShowHideLog_triggered()
+{
+    ui->dockWidgetLog->setVisible(!ui->dockWidgetLog->isVisible());
+}
+
+void MainWindow::on_actAbout_triggered()
+{
+    QMessageBox::about(this,tr("О программе"),
+        tr("<b><font color=\"red\">Q</font>Galaxy </b>v 1.1\
+           <br><font color=\"brown\">(c) Тянутов Артём 2014 г</font>\
+           <br><font color=\"green\">E-mail: </font>\
+            <a href=\"mailto:gcc88@mail.ru\">artem.lab@gmail.com</a>\
+            <br><font color=\"magenta\">jabber:</font> gcc@jabber.ru"));
+}
+
+void MainWindow::on_actAboutQt_triggered()
+{
+    QMessageBox::aboutQt(this,tr("О Qt"));
+}
+
 void MainWindow::refreshUi()
 {
     bool is_ready = nbodyWidget->isReady();
@@ -361,6 +435,7 @@ void MainWindow::refreshUi()
 
     ui->actGenSGalaxy->setEnabled(is_not_running);
     ui->actGenGalaxyCollision->setEnabled(is_not_running);
+    ui->actGenSettings->setEnabled(is_not_running);
 
     ui->actOpenFile->setEnabled(is_not_running);
     ui->actSaveFile->setEnabled(is_not_running);

@@ -6,12 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>351</width>
-    <height>284</height>
+    <width>347</width>
+    <height>280</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Редактирование</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="res.qrc">
+    <normaloff>:/images/edit.png</normaloff>:/images/edit.png</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -53,7 +57,7 @@
    <item row="0" column="2">
     <widget class="QGroupBox" name="gbPosition">
      <property name="title">
-      <string>Позиция, св. лет</string>
+      <string>Позиция, пк</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
@@ -74,7 +78,7 @@
         <item>
          <widget class="QDoubleSpinBox" name="dsbPositionX">
           <property name="decimals">
-           <number>10</number>
+           <number>12</number>
           </property>
           <property name="maximum">
            <double>0.000000000000000</double>
@@ -101,7 +105,7 @@
         <item>
          <widget class="QDoubleSpinBox" name="dsbPositionY">
           <property name="decimals">
-           <number>10</number>
+           <number>12</number>
           </property>
           <property name="maximum">
            <double>0.000000000000000</double>
@@ -128,7 +132,7 @@
         <item>
          <widget class="QDoubleSpinBox" name="dsbPositionZ">
           <property name="decimals">
-           <number>10</number>
+           <number>12</number>
           </property>
           <property name="maximum">
            <double>0.000000000000000</double>
@@ -184,7 +188,7 @@
    <item row="1" column="2">
     <widget class="QGroupBox" name="gbSpeed">
      <property name="title">
-      <string>Скорость, св. лет / год</string>
+      <string>Скорость, пк / год</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -211,7 +215,7 @@
            </sizepolicy>
           </property>
           <property name="decimals">
-           <number>10</number>
+           <number>12</number>
           </property>
           <property name="maximum">
            <double>0.000000000000000</double>
@@ -244,7 +248,7 @@
            </sizepolicy>
           </property>
           <property name="decimals">
-           <number>10</number>
+           <number>12</number>
           </property>
           <property name="maximum">
            <double>0.000000000000000</double>
@@ -277,7 +281,7 @@
            </sizepolicy>
           </property>
           <property name="decimals">
-           <number>10</number>
+           <number>12</number>
           </property>
           <property name="maximum">
            <double>0.000000000000000</double>
@@ -314,7 +318,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>sbIndex</sender>

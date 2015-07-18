@@ -14,11 +14,11 @@ DEFINES += "CUSTOM_GLBUFFER"
 QMAKE_CXXFLAGS += -std=c++0x -U__STRICT_ANSI__
 
 linux-g++-32 {
-    LIBS += -L/usr/X11R6/lib -L/usr/lib
+    LIBS += -L/usr/lib -L/usr/X11R6/lib
 }
 
 linux-g++-64 {
-    LIBS += -L/usr/X11R6/lib64 -L/usr/lib64
+    LIBS += -L/usr/lib64 -L/usr/X11R6/lib64
 }
 
 linux-g++ {
@@ -56,7 +56,8 @@ SOURCES += main.cpp\
     spiralgalaxy.cpp \
     point3f.cpp \
     editbodydialog.cpp \
-    utils.cpp
+    utils.cpp \
+    gensettingsdialog.cpp
 
 HEADERS  += mainwindow.h \
     log.h \
@@ -78,11 +79,13 @@ HEADERS  += mainwindow.h \
     galaxy.h \
     spiralgalaxy.h \
     point3f.h \
-    editbodydialog.h
+    editbodydialog.h \
+    gensettingsdialog.h
 
 FORMS    += mainwindow.ui \
     oclsettingsdialog.ui \
-    editbodydialog.ui
+    editbodydialog.ui \
+    gensettingsdialog.ui
 
 RESOURCES += \
     res.qrc

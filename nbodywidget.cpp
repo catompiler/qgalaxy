@@ -19,6 +19,7 @@
 
 
 #define VIEW_DISTANCE_DEFAULT 5000.0f
+//#define VIEW_DISTANCE_DEFAULT 20000.0f
 
 
 
@@ -574,10 +575,12 @@ void NBodyWidget::initializeGL()
         // Разрешим генерацию текстурных координат для точек.
         glTexEnvf(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         // Установим размер точек.
-        glPointSize(7.5f);
+        glPointSize(7.5f);//7.5
+        //glPointSize(10.0f);//7.5
     }else{
         // Иначе будем рисовать точки поменьше и без текстуры.
-        glPointSize(2.5f);
+        glPointSize(2.5f);//2.5
+        //glPointSize(3.5f);//2.5
     }
 
     if(has_point_parameters){

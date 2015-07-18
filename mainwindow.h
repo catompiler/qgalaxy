@@ -8,6 +8,7 @@
 class NBodyWidget;
 class OCLSettingsDialog;
 class EditBodyDialog;
+class GenSettingsDialog;
 class QFile;
 class QTimer;
 
@@ -73,6 +74,11 @@ private slots:
     void on_actSettingsOCL_triggered();
 
     /**
+     * @brief Обработчик действия открытия настроек генерации.
+     */
+    void on_actGenSettings_triggered();
+
+    /**
      * @brief Обработчик действия запуска симуляции.
      */
     void on_actSimStart_triggered();
@@ -111,6 +117,21 @@ private slots:
      * @brief Обработчик действия сброса симуляции.
      */
     void on_actSimReset_triggered();
+
+    /**
+     * @brief Обработчик действия отображени / скрытия окна лога.
+     */
+    void on_actShowHideLog_triggered();
+
+    /**
+     * @brief Обработчик действия о программе.
+     */
+    void on_actAbout_triggered();
+
+    /**
+     * @brief Обработчик действия о Qt.
+     */
+    void on_actAboutQt_triggered();
 private:
 
     /**
@@ -152,6 +173,9 @@ private:
 
     //! Диалог редактирования.
     EditBodyDialog* editBodyDlg;
+
+    //! Диалог настроек генерации.
+    GenSettingsDialog* genSettingsDlg;
 };
 
 #endif // MAINWINDOW_H

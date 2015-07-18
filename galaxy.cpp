@@ -3,7 +3,11 @@
 /*
  G, LY^3 / (Msun * Year^2)
 */
-const qreal Galaxy::G = 1.57e-13; //66462.65;
+//const qreal Galaxy::G = 1.57e-13; //66462.65;
+/*
+ G, LY^3 / (Msun * Year^2)
+*/
+const qreal Galaxy::G = 4.4932e-15f; //66462.65;
 
 Galaxy::Galaxy()
 {

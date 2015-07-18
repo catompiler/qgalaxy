@@ -53,7 +53,11 @@ __kernel void kernel_main(const unsigned int count,
     /*
     G, LY^3 / (Msun * Year^2)
     */
-    const float G = 1.57e-13f;
+    //const float G = 1.57e-13f;
+    /*
+    G, PC^3 / (Msun * Year^2)
+    */
+    const float G = 4.4932e-15f;
 
     // Номер звезды.
     gid = get_global_id(1) * get_global_size(0) + get_global_id(0);

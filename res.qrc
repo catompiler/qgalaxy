@@ -18,5 +18,9 @@
         <file>edit.png</file>
         <file>reset.png</file>
         <file>qgalaxy_icon_64x64.png</file>
+        <file>gen_settings.png</file>
+        <file>about.png</file>
+        <file>aboutqt.png</file>
+        <file>log.png</file>
     </qresource>
 </RCC>
