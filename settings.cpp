@@ -40,21 +40,21 @@ Settings &Settings::get()
 void Settings::read()
 {
     QSettings settings(company_name, app_name);
-    bodies_count = settings.value(param_bodies_count_name, 1024U).toUInt();
+    bodies_count = settings.value(param_bodies_count_name, 2048U).toUInt();
     cl_platform_name = settings.value(param_cl_platform_name, QString()).toString();
     cl_device_name = settings.value(param_cl_device_name, QString()).toString();
     time_step = settings.value(param_time_step_name, 100000.0f).toFloat();
 
-    star_mass_min = settings.value(param_star_mass_min, 1e0f).toFloat();
+    star_mass_min = settings.value(param_star_mass_min, 1e1f).toFloat();
     star_mass_max = settings.value(param_star_mass_max, 1e2f).toFloat();
-    bh_mass_min = settings.value(param_bh_mass_min, 1e6f).toFloat();
-    bh_mass_max = settings.value(param_bh_mass_max, 1e7f).toFloat();
+    bh_mass_min = settings.value(param_bh_mass_min, 1e7f).toFloat();
+    bh_mass_max = settings.value(param_bh_mass_max, 1e8f).toFloat();
 
     single_radius = settings.value(param_single_radius, 2000.0f).toFloat();
-    radius_min = settings.value(param_radius_min, 1000.0f).toFloat();
-    radius_max = settings.value(param_radius_max, 2000.0f).toFloat();
-    distance_max = settings.value(param_distance_max, 1000.0f).toFloat();
-    velocity_max = settings.value(param_velocity_max, 0.00001f).toFloat();
+    radius_min = settings.value(param_radius_min, 1500.0f).toFloat();
+    radius_max = settings.value(param_radius_max, 2500.0f).toFloat();
+    distance_max = settings.value(param_distance_max, 1500.0f).toFloat();
+    velocity_max = settings.value(param_velocity_max, 0.000001f).toFloat();
 }
 
 void Settings::write()
