@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QTimer>
+#include <QCloseEvent>
 #include "clplatform.h"
 #include "cldevice.h"
 #include "log.h"
@@ -64,12 +65,14 @@ MainWindow::MainWindow(QWidget *parent) :
     cur_fps = 0;
     cur_frames = 0;
 
+    ui->dockWidgetLog->setVisible(Settings::get().logShowed());
+
     refreshUi();
 }
 
 MainWindow::~MainWindow()
 {
-    fpsTimer->stop();
+    //fpsTimer->stop();
     delete fpsTimer;
 
     delete editBodyDlg;
@@ -80,6 +83,12 @@ MainWindow::~MainWindow()
 
     logFile->close();
     delete logFile;
+}
+
+void MainWindow::closeEvent(QCloseEvent* /*event*/)
+{
+    on_actSimStop_triggered();
+    Settings::get().setLogShowed(ui->dockWidgetLog->isVisible());
 }
 
 void MainWindow::addlog(Log::MsgType msg_type, const QString& who, const QString &msg)

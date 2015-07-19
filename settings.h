@@ -17,6 +17,9 @@ public:
     void read();
     void write();
 
+    bool logShowed() const;
+    void setLogShowed(bool showed);
+
     size_t bodiesCount() const;
     void setBodiesCount(size_t bodies);
 
@@ -65,6 +68,7 @@ private:
     Settings();
     ~Settings();
 
+    bool log_showed;
     size_t bodies_count;
     QString cl_platform_name;
     QString cl_device_name;

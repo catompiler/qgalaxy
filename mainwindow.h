@@ -11,6 +11,7 @@ class EditBodyDialog;
 class GenSettingsDialog;
 class QFile;
 class QTimer;
+class QCloseEvent;
 
 namespace Ui {
 class MainWindow;
@@ -132,6 +133,15 @@ private slots:
      * @brief Обработчик действия о Qt.
      */
     void on_actAboutQt_triggered();
+
+protected:
+
+    /**
+     * @brief Обработчик закрытия окна.
+     * @param event Событие закрытия окна.
+     */
+    void closeEvent(QCloseEvent*);
+
 private:
 
     /**

@@ -5,6 +5,8 @@
 
 static const char* company_name = "artem.lab";
 static const char* app_name = "QGalaxy";
+
+static const char* param_log_showed = "log_showed";
 static const char* param_bodies_count_name = "bodies_count";
 static const char* param_cl_platform_name = "cl_platform_name";
 static const char* param_cl_device_name = "cl_device_name";
@@ -40,6 +42,7 @@ Settings &Settings::get()
 void Settings::read()
 {
     QSettings settings(company_name, app_name);
+    log_showed = settings.value(param_log_showed, true).toBool();
     bodies_count = settings.value(param_bodies_count_name, 2048U).toUInt();
     cl_platform_name = settings.value(param_cl_platform_name, QString()).toString();
     cl_device_name = settings.value(param_cl_device_name, QString()).toString();
@@ -60,6 +63,7 @@ void Settings::read()
 void Settings::write()
 {
     QSettings settings(company_name, app_name);
+    settings.setValue(param_log_showed, log_showed);
     settings.setValue(param_bodies_count_name, static_cast<unsigned int>(bodies_count));
     settings.setValue(param_cl_platform_name, cl_platform_name);
     settings.setValue(param_cl_device_name, cl_device_name);
@@ -75,6 +79,17 @@ void Settings::write()
     settings.setValue(param_radius_max, radius_max);
     settings.setValue(param_distance_max, distance_max);
     settings.setValue(param_velocity_max, velocity_max);
+}
+
+bool Settings::logShowed() const
+{
+    return log_showed;
+}
+
+void Settings::setLogShowed(bool showed)
+{
+    log_showed = showed;
+    emit settingsChanged();
 }
 
 size_t Settings::bodiesCount() const
