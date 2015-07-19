@@ -6,7 +6,7 @@
 #include "point3f.h"
 //#include <QDebug>
 
-const qreal SpiralGalaxy::depth_div_radius = 0.1;
+const qreal SpiralGalaxy::depth_div_radius = 0.15;
 const qreal SpiralGalaxy::min_radius_k = 0.015;
 
 
@@ -34,6 +34,9 @@ bool SpiralGalaxy::generate()
 
     // Вектор направления вверх.
     const QVector3D galaxy_up = QVector3D(0.0, 1.0, 0.0);
+
+    // Вектор направления вправо.
+    const QVector3D galaxy_right = QVector3D(1.0, 0.0, 0.0);
 
     // Случайно выберем число спиралей (2 или 4).
     const size_t spirals_count = (rand() % 2 + 1) * 2;
@@ -69,6 +72,8 @@ bool SpiralGalaxy::generate()
     qreal max_h;
     // Высота орбиты звезды.
     qreal h;
+    // Угол наклона орбиты.
+    qreal alpha;
 
     // Большая полуось эллипса.
     qreal ellipse_a;
@@ -86,6 +91,8 @@ bool SpiralGalaxy::generate()
 
     // Кватернион вращения орбиты.
     QQuaternion orbit_quat;
+    // Кватернион наклона орбиты.
+    QQuaternion orbit_angle_quat;
 
     // Масса звёзд внутри орбиты звезды.
     qreal mass_stars_in_radius;
@@ -126,7 +133,7 @@ bool SpiralGalaxy::generate()
 #endif
 
         // Высота над диском.
-        max_h = depth_div_radius * m_radius * pow(1.0 - r_a/m_radius, 2);
+        max_h = depth_div_radius * m_radius * pow(1.0 - r_a/m_radius, 2.5);
         // Случайно выберем высоту.
         h = max_h * getRandsf();
 
@@ -172,20 +179,30 @@ bool SpiralGalaxy::generate()
             local_tangent_y = getRandsf();
         }
 
+        alpha = atan(h / r_a);
+
         // Установим позицию.
         pos.setX(local_x + ellipse_c);
-        pos.setY(h);
+        pos.setY(0); //h
         pos.setZ(local_y);
 
         // Установим вектор касательной.
         tangent.setX(local_tangent_x - local_x);
-        tangent.setY(-h);
+        tangent.setY(0); //-h
         tangent.setZ(local_tangent_y - local_y);
 
         // Кватернион поворота орбиты.
         orbit_quat = QQuaternion::fromAxisAndAngle(galaxy_up, degrees(-orbit_angle));
         // Нормализуем.
         orbit_quat.normalize();
+
+        // Кватернион наклона орбиты.
+        orbit_angle_quat = QQuaternion::fromAxisAndAngle(galaxy_right, degrees(alpha));
+        // Нормализуем.
+        orbit_angle_quat.normalize();
+
+        // Сложим вращения.
+        orbit_quat *= orbit_angle_quat;
 
         // Повернём орбиту.
         pos = orbit_quat.rotatedVector(pos);
