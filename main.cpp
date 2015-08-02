@@ -1,5 +1,7 @@
 #include <QtGui/QApplication>
 #include <QTextCodec>
+#include <QTranslator>
+#include <QLocale>
 #include <stdlib.h>
 #include <time.h>
 #include "mainwindow.h"
@@ -30,8 +32,18 @@ void test(){
 
 int main(int argc, char *argv[])
 {
+    QLocale::setDefault(QLocale());
+
     QApplication a(argc, argv);
     QTextCodec::setCodecForTr(QTextCodec::codecForName("utf-8"));
+
+    QTranslator qttr;
+    qttr.load("qt_" + QLocale::system().name());
+    a.installTranslator(&qttr);
+
+    QTranslator apptr;
+    apptr.load("qgalaxy_" + QLocale::system().name());
+    a.installTranslator(&apptr);
 
     Settings::get().read();
 

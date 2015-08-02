@@ -22,5 +22,6 @@
         <file>about.png</file>
         <file>aboutqt.png</file>
         <file>log.png</file>
+        <file>screenshot.png</file>
     </qresource>
 </RCC>

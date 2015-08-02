@@ -8,6 +8,8 @@ GenSettingsDialog::GenSettingsDialog(QWidget *parent) :
     ui->setupUi(this);
     ui->sbBhMassMin->setMaximum(1e38);
     ui->sbBhMassMax->setMaximum(1e38);
+    ui->sbStarMassMin->setMaximum(1e38);
+    ui->sbStarMassMax->setMaximum(1e38);
 }
 
 GenSettingsDialog::~GenSettingsDialog()

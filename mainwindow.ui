@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>570</width>
-    <height>510</height>
+    <width>566</width>
+    <height>506</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -32,7 +32,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>570</width>
+     <width>566</width>
      <height>22</height>
     </rect>
    </property>
@@ -42,6 +42,8 @@
     </property>
     <addaction name="actOpenFile"/>
     <addaction name="actSaveFile"/>
+    <addaction name="separator"/>
+    <addaction name="actScreenShot"/>
     <addaction name="separator"/>
     <addaction name="actExit"/>
    </widget>
@@ -97,6 +99,8 @@
    </attribute>
    <addaction name="actOpenFile"/>
    <addaction name="actSaveFile"/>
+   <addaction name="separator"/>
+   <addaction name="actScreenShot"/>
    <addaction name="separator"/>
    <addaction name="actExit"/>
   </widget>
@@ -192,7 +196,7 @@
   </widget>
   <widget class="QToolBar" name="toolBarHelp">
    <property name="windowTitle">
-    <string>toolBar</string>
+    <string>Справка</string>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -369,6 +373,18 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+H</string>
+   </property>
+  </action>
+  <action name="actScreenShot">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/images/screenshot.png</normaloff>:/images/screenshot.png</iconset>
+   </property>
+   <property name="text">
+    <string>Ск&amp;риншот</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
    </property>
   </action>
  </widget>

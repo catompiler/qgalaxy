@@ -11,6 +11,11 @@
 #include <QInputDialog>
 #include <QTimer>
 #include <QCloseEvent>
+#include <QDir>
+#include <QStringList>
+#include <QRegExp>
+#include <QImage>
+#include <QDateTime>
 #include "clplatform.h"
 #include "cldevice.h"
 #include "log.h"
@@ -414,13 +419,54 @@ void MainWindow::on_actShowHideLog_triggered()
     ui->dockWidgetLog->setVisible(!ui->dockWidgetLog->isVisible());
 }
 
+void MainWindow::on_actScreenShot_triggered()
+{
+    QDir dir;
+    //qDebug() << dir.path();
+    if(!dir.exists("screenshots")){
+        if(!dir.mkdir("screenshots")){
+            log(Log::ERROR, LOG_WHO, tr("Ошибка создания директории скриншотов!"));
+            return;
+        }
+    }
+    dir.cd("screenshots");
+
+    QStringList files = dir.entryList(QStringList() << "screenshot*.png", QDir::Files);
+
+    unsigned int last_number = 0;
+
+    if(!files.empty()){
+        QRegExp rxp("(\\d+)");
+        unsigned int tmp_number = 0;
+        for(QStringList::iterator it = files.begin(); it != files.end(); ++ it){
+            //qDebug() << (*it);
+            if(rxp.indexIn((*it)) > 0){
+                //qDebug() << rxp.cap(1);
+                tmp_number = rxp.cap(1).toUInt();
+                if(last_number < tmp_number){
+                    last_number = tmp_number;
+                }
+            }
+        }
+    }
+
+    last_number ++;
+
+    QImage img = nbodyWidget->grabFrameBuffer();
+
+    if(!img.save(dir.path() + QString("/screenshot_%1.png").arg(last_number), "png")){
+        log(Log::ERROR, LOG_WHO, tr("Ошибка сохранения скриншота!"));
+    }
+
+}
+
 void MainWindow::on_actAbout_triggered()
 {
     QMessageBox::about(this,tr("О программе"),
         tr("<b><font color=\"red\">Q</font>Galaxy </b>v 1.1\
            <br><font color=\"brown\">(c) Тянутов Артём 2014 г</font>\
            <br><font color=\"green\">E-mail: </font>\
-            <a href=\"mailto:gcc88@mail.ru\">artem.lab@gmail.com</a>\
+            <a href=\"mailto:artem.lab@gmail.com\">artem.lab@gmail.com</a>\
             <br><font color=\"magenta\">jabber:</font> gcc@jabber.ru"));
 }
 

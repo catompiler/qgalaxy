@@ -125,6 +125,11 @@ private slots:
     void on_actShowHideLog_triggered();
 
     /**
+     * @brief Обработчик действия сохранения скриншота.
+     */
+    void on_actScreenShot_triggered();
+
+    /**
      * @brief Обработчик действия о программе.
      */
     void on_actAbout_triggered();

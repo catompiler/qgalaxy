@@ -92,3 +92,6 @@ RESOURCES += \
 
 OTHER_FILES += \
     nbody.cl
+
+TRANSLATIONS += qgalaxy_ru.ts \
+                qgalaxy_en.ts
